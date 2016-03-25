@@ -6,6 +6,8 @@
 using namespace boost::asio;
 using namespace std;
 
+bool isShortRead(const boost::system::error_code& error);
+
 namespace ydd
 {
     YdClient::YdClient(string& request, io_service& ios, bool useSandbox) :
@@ -13,9 +15,9 @@ namespace ydd
 	hostIt_(useSandbox ? YdRemote::hostSandboxIt : YdRemote::hostIt),
 	request_(request),
 	useSandbox_(useSandbox),
-	httpHeader_(useSandbox ? YdRemote::httpHeaderSandbox : YdRemote::httpHeader)
+	httpRequestHeader_(useSandbox ? YdRemote::httpHeaderSandbox : YdRemote::httpHeader)
     {
-	httpRequest_ += httpHeader_;
+	httpRequest_ += httpRequestHeader_;
 	httpRequest_ += to_string(request_.length()) + "\r\n";
 	httpRequest_ += "Connection: close\r\n\r\n";
 	httpRequest_ += request_ + "\r\n";
@@ -87,9 +89,15 @@ namespace ydd
     {
 	if(error)
 	{
-	    if(error != boost::asio::error::eof)
+	    if(error == boost::asio::error::eof || isShortRead(error))
+	    {
+		std::cout << &httpResponse_ << endl;
+		parseHttpResponse();
+	    }
+	    else
+	    {
 		msyslog(LOG_ERR, "%s", error.message().c_str());
-	    std::cout << &httpResponse_ << endl;
+	    }
 	    return;
 	}
 	boost::asio::async_read(
@@ -101,4 +109,23 @@ namespace ydd
 		    this,
 		    boost::asio::placeholders::error));
     }
+
+    void YdClient::parseHttpResponse()
+    {
+/*	istream response_stream(&httpResponse_);
+	string httpVersion;
+	response_stream >> httpVersion;
+
+	cout << "Here: " << httpVersion;*/
+	cout << "Here I am" << endl;
+    }
+
 }
+
+    bool isShortRead(const boost::system::error_code& error)
+    {
+	if(error.category() == boost::asio::error::get_ssl_category())
+	    if(error.value() == ERR_PACK(ERR_LIB_SSL, 0, SSL_R_SHORT_READ))
+		return true;
+	return false;
+    }

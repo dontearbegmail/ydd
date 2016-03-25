@@ -16,14 +16,16 @@ namespace ydd
 	    void handleHandshake(const boost::system::error_code& error);
 	    void handleWrite(const boost::system::error_code& error);
 	    void handleRead(const boost::system::error_code& error);
+	    void parseHttpResponse();
 	private:
 	    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket_;
 	    boost::asio::ip::tcp::resolver::iterator& hostIt_;
 	    std::string request_;
 	    bool useSandbox_;
-	    const std::string& httpHeader_;
+	    const std::string& httpRequestHeader_;
 	    std::string httpRequest_;
 	    boost::asio::streambuf httpResponse_;
+
     };
 }
 
