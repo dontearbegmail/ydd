@@ -27,6 +27,12 @@ namespace ydd
 	    std::string httpRequest_;
 	    boost::asio::streambuf httpResponse_;
 	    std::string jsonResponse_;
+
+	    bool isShortRead(const boost::system::error_code& error);
+	    bool flushHttpHeader(std::istream& istr);
+	    bool checkHttpVersionStatus(std::istream& istr);
+	    ssize_t parseChunkSize(std::string& s);
+	    bool parseHttpChunks(std::istream& istr);
     };
 }
 
