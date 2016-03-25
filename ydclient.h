@@ -17,6 +17,7 @@ namespace ydd
 	    void handleWrite(const boost::system::error_code& error);
 	    void handleRead(const boost::system::error_code& error);
 	    void parseHttpResponse();
+	    const std::string& getJsonResponse();
 	private:
 	    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket_;
 	    boost::asio::ip::tcp::resolver::iterator& hostIt_;
@@ -25,7 +26,7 @@ namespace ydd
 	    const std::string& httpRequestHeader_;
 	    std::string httpRequest_;
 	    boost::asio::streambuf httpResponse_;
-
+	    std::string jsonResponse_;
     };
 }
 
