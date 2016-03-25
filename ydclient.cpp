@@ -13,14 +13,13 @@ namespace ydd
 	hostIt_(useSandbox ? YdRemote::hostSandboxIt : YdRemote::hostIt),
 	request_(request),
 	useSandbox_(useSandbox),
-	httpRequestHeader_(useSandbox ? YdRemote::httpHeaderSandbox : YdRemote::httpHeader)
+	httpRequestHeader_(useSandbox ? YdRemote::httpHeaderSandbox : YdRemote::httpHeader),
+	state_(inProgress)
     {
 	httpRequest_ += httpRequestHeader_;
 	httpRequest_ += to_string(request_.length()) + "\r\n";
 	httpRequest_ += "Connection: close\r\n\r\n";
 	httpRequest_ += request_ + "\r\n";
-
-	cout << httpRequest_ << endl << "-------" << endl;
 
 	async_connect(
 		socket_.lowest_layer(), 
@@ -38,6 +37,7 @@ namespace ydd
 	if(error)
 	{
 	    msyslog(LOG_ERR, "%s", error.message().c_str());
+	    state_ = failed;
 	    return;
 	}
 	socket_.async_handshake(
@@ -55,6 +55,7 @@ namespace ydd
 	if(error)
 	{
 	    msyslog(LOG_ERR, "%s", error.message().c_str());
+	    state_ = failed;
 	    return;
 	}
 	boost::asio::async_write(
@@ -71,6 +72,7 @@ namespace ydd
 	if(error)
 	{
 	    msyslog(LOG_ERR, "%s", error.message().c_str());
+	    state_ = failed;
 	    return;
 	}
 	boost::asio::async_read(
@@ -94,6 +96,7 @@ namespace ydd
 	    else
 	    {
 		msyslog(LOG_ERR, "%s", error.message().c_str());
+		state_ = failed;
 	    }
 	    return;
 	}
@@ -109,6 +112,7 @@ namespace ydd
 
     void YdClient::parseHttpResponse()
     {
+	state_ = failed;
 	try
 	{
 	    istream response_stream(&httpResponse_);
@@ -123,6 +127,7 @@ namespace ydd
 	{
 	    msyslog(LOG_ERR, "Got an exception while parsing an HTTP response: %s", e.what());
 	}
+	state_ = ok;
     }
 
     const string& YdClient::getJsonResponse()
@@ -186,12 +191,12 @@ namespace ydd
 	{
 	    getline(istr, line);
 	    chunkSize = parseChunkSize(line);
-	    if(buf.size() < (size_t)chunkSize)
-	    {
-		buf.resize(chunkSize * 2);
-	    }
 	    if((chunkSize > 0) && istr)
 	    {
+		if(buf.size() < (size_t)chunkSize)
+		{
+		    buf.resize(chunkSize * 2);
+		}
 		istr.read(&buf[0], chunkSize);
 		getline(istr, line); // chunkSize doesn't include terminating \r\n 
 		jsonResponse_.append(buf.begin(), buf.begin() + chunkSize);
@@ -228,5 +233,10 @@ namespace ydd
 	    msyslog(LOG_ERR, "Got out_of_range on the following chunk HEX size: %s", s.c_str());
 	}
 	return size;
+    }
+
+    YdClient::State YdClient::getState()
+    {
+	return state_;
     }
 }

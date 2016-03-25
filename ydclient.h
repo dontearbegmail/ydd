@@ -11,6 +11,7 @@ namespace ydd
     class YdClient
     {
 	public: 
+	    typedef enum {inProgress, failed, ok} State;
 	    YdClient(std::string& request, boost::asio::io_service& ios, bool useSandbox);
 	    void handleConnect(const boost::system::error_code& error);
 	    void handleHandshake(const boost::system::error_code& error);
@@ -18,6 +19,7 @@ namespace ydd
 	    void handleRead(const boost::system::error_code& error);
 	    void parseHttpResponse();
 	    const std::string& getJsonResponse();
+	    State getState();
 	private:
 	    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket_;
 	    boost::asio::ip::tcp::resolver::iterator& hostIt_;
@@ -27,6 +29,7 @@ namespace ydd
 	    std::string httpRequest_;
 	    boost::asio::streambuf httpResponse_;
 	    std::string jsonResponse_;
+	    State state_;
 
 	    bool isShortRead(const boost::system::error_code& error);
 	    bool flushHttpHeader(std::istream& istr);
