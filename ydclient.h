@@ -22,8 +22,8 @@ namespace ydd
 	    std::string request_;
 	    bool useSandbox_;
 	    const std::string& httpHeader_;
-	    boost::asio::streambuf http_request_;
-	    boost::asio::streambuf http_response_;
+	    std::string httpRequest_;
+	    boost::asio::streambuf httpResponse_;
     };
 }
 

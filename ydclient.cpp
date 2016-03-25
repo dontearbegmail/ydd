@@ -1,6 +1,7 @@
 #include "ydclient.h"
 #include "general.h"
 #include <boost/bind.hpp>
+#include <iostream>
 
 using namespace boost::asio;
 using namespace std;
@@ -14,6 +15,13 @@ namespace ydd
 	useSandbox_(useSandbox),
 	httpHeader_(useSandbox ? YdRemote::httpHeaderSandbox : YdRemote::httpHeader)
     {
+	httpRequest_ += httpHeader_;
+	httpRequest_ += to_string(request_.length()) + "\r\n";
+	httpRequest_ += "Connection: close\r\n\r\n";
+	httpRequest_ += request_ + "\r\n";
+
+	cout << httpRequest_ << endl << "-------" << endl;
+
 	async_connect(
 		socket_.lowest_layer(), 
 		hostIt_, 
@@ -51,7 +59,7 @@ namespace ydd
 	}
 	boost::asio::async_write(
 		socket_,
-		http_request_,
+		boost::asio::buffer(httpRequest_, httpRequest_.length()),
 		boost::bind(
 		    &YdClient::handleWrite, 
 		    this,
@@ -67,7 +75,7 @@ namespace ydd
 	}
 	boost::asio::async_read(
 		socket_,
-		http_response_,
+		httpResponse_,
 		boost::asio::transfer_at_least(1),
 		boost::bind(
 		    &YdClient::handleRead, 
@@ -81,11 +89,12 @@ namespace ydd
 	{
 	    if(error != boost::asio::error::eof)
 		msyslog(LOG_ERR, "%s", error.message().c_str());
+	    std::cout << &httpResponse_ << endl;
 	    return;
 	}
 	boost::asio::async_read(
 		socket_,
-		http_response_,
+		httpResponse_,
 		boost::asio::transfer_at_least(1),
 		boost::bind(
 		    &YdClient::handleRead, 

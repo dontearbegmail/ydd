@@ -1,5 +1,5 @@
 .PHONY: all clean
-CPPFLAGS = -g -Wall -std=c++11 -D_GNU_SOURCE -lboost_system -lssl -lcrypto -lpthread
+CPPFLAGS = -Wall -std=c++11 -D_GNU_SOURCE -lboost_system -lssl -lcrypto -lpthread
 SRCS = ydremote.cpp ydclient.cpp
 OBJS = $(SRCS:.cpp=.o)
 

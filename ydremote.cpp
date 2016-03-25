@@ -19,7 +19,7 @@ namespace ydd
 	"Content-Length: ";
     ssl::context YdRemote::ctx = YdRemote::initCtx();
     ip::tcp::resolver::iterator YdRemote::hostIt = YdRemote::initHostIt(false);
-    ip::tcp::resolver::iterator YdRemote::hostSandboxIt = YdRemote::initHostIt(false);
+    ip::tcp::resolver::iterator YdRemote::hostSandboxIt = YdRemote::initHostIt(true);
 
     ssl::context YdRemote::initCtx()
     {
