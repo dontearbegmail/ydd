@@ -180,17 +180,21 @@ namespace ydd
     {
 	string line;
 	ssize_t chunkSize;
+	vector<char> buf;
 	jsonResponse_ = "";
 	do
 	{
 	    getline(istr, line);
 	    chunkSize = parseChunkSize(line);
+	    if(buf.size() < (size_t)chunkSize)
+	    {
+		buf.resize(chunkSize * 2);
+	    }
 	    if((chunkSize > 0) && istr)
 	    {
-		char* buf = new char[chunkSize];
-		istr.read(buf, chunkSize);
+		istr.read(&buf[0], chunkSize);
 		getline(istr, line); // chunkSize doesn't include terminating \r\n 
-		jsonResponse_.append(buf, chunkSize);
+		jsonResponse_.append(buf.begin(), buf.begin() + chunkSize);
 	    }
 	}
 	while((chunkSize > 0) && istr);
