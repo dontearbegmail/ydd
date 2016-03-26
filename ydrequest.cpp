@@ -24,7 +24,7 @@ namespace ydd
 	state_ = initError;
 	try
 	{
-	    if(this->ptRequest_.empty())
+	    if(ptRequest_.empty())
 		return;
 	    ostringstream buf; 
 	    write_json(buf, ptRequest_, false);

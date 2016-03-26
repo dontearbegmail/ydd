@@ -2,7 +2,10 @@
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <sstream>
-#include "ydrgetversion.h"
+#include "ydrcreatewsreport.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 void timerHandler(const boost::system::error_code& /*e*/)
 {
@@ -13,6 +16,24 @@ int main()
     using namespace ydd;
     using namespace std;
 
+    /*using namespace boost::property_tree;
+    ptree pt;
+    ptree child, subarr;
+
+    child.put("", "превед");
+    subarr.push_back(std::make_pair("", child));
+    child.put("", "кагдила");
+    subarr.push_back(std::make_pair("", child));
+    pt.add_child("Phrases", subarr);
+
+    ostringstream buf; 
+    write_json(buf, pt, false);
+    string json = buf.str();
+
+    cout << json << endl;
+
+    cout << json.length() << endl;*/
+
     string token = "c9f13bf86c694e629440c6d56dd29b1e";
 
     try
@@ -21,8 +42,10 @@ int main()
 	    "\"locale\":\"ru\",\"token\":\"c9f13bf86c694e629440c6d56dd29b1e\"}";
 
 	boost::asio::io_service io_service;
-	YdrGetVersion r(token, io_service, true);
-	r.run();
+	YdrCreateWsReport::Phrases phrases = {"гипсокартон", "плитка", "саморезы"};
+	YdrCreateWsReport::GeoId geoId;
+	YdrCreateWsReport r(token, phrases, geoId, io_service, true);
+	//r.run();
 	//boost::asio::deadline_timer t(io_service, boost::posix_time::seconds(50));
 	//t.async_wait(&timerHandler);
 	
@@ -34,11 +57,10 @@ int main()
 	    r.getYdErrorString(es);
 	    cout << es << endl;
 	}
-	long version;
-	if(r.getVersion(version))
-	    cout << "Version: " << version << endl;
-	else
-	    cout << "Failed to get version: " << version << endl;
+	else 
+	{
+	    cout << r.getJsonResponse() << endl;
+	}
     }
     catch (std::exception& e)
     {
