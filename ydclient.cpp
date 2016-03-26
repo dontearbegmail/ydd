@@ -8,7 +8,7 @@ using namespace std;
 
 namespace ydd
 {
-    YdClient::YdClient(string& request, io_service& ios, bool useSandbox) :
+    YdClient::YdClient(ydd::YdRequest& request, io_service& ios, bool useSandbox) :
 	socket_(ios, YdRemote::ctx),
 	hostIt_(useSandbox ? YdRemote::hostSandboxIt : YdRemote::hostIt),
 	request_(request),
@@ -17,9 +17,9 @@ namespace ydd
 	state_(inProgress)
     {
 	httpRequest_ += httpRequestHeader_;
-	httpRequest_ += to_string(request_.length()) + "\r\n";
+	httpRequest_ += to_string(request_.get().length()) + "\r\n";
 	httpRequest_ += "Connection: close\r\n\r\n";
-	httpRequest_ += request_ + "\r\n";
+	httpRequest_ += request_.get() + "\r\n";
 
 	async_connect(
 		socket_.lowest_layer(), 
@@ -30,6 +30,11 @@ namespace ydd
 		    boost::asio::placeholders::error
 		    )
 		);
+    }
+
+    YdClient::Pointer YdClient::create(ydd::YdRequest& request, io_service& ios, bool useSandbox)
+    {
+	return YdClient::Pointer(new YdClient(request, ios, useSandbox));
     }
 
     void YdClient::handleConnect(const boost::system::error_code& error)
@@ -92,6 +97,7 @@ namespace ydd
 	    if(error == boost::asio::error::eof || isShortRead(error))
 	    {
 		parseHttpResponse();
+		request_.processResult();
 	    }
 	    else
 	    {
@@ -123,9 +129,19 @@ namespace ydd
 	    if(!parseHttpChunks(response_stream))
 		return;
 	}
-	catch(istream::failure e)
+	catch(istream::failure& e)
 	{
-	    msyslog(LOG_ERR, "Got an exception while parsing an HTTP response: %s", e.what());
+	    msyslog(LOG_ERR, "Got an istream::failure exception while "
+		    "parsing an HTTP response: %s", e.what());
+	}
+	catch(std::exception& e)
+	{
+	    msyslog(LOG_ERR, "Got an std::exception while parsing "
+		    "an HTTP response: %s", e.what());
+	}
+	catch(...)
+	{
+	    msyslog(LOG_ERR, "Got an exception while parsing an HTTP response");
 	}
 	state_ = ok;
     }
@@ -151,7 +167,7 @@ namespace ydd
 
 	do
 	{
-	    gotRead = getline(istr, str);
+	    gotRead = getline(istr, str); /* throws istream::failure */
 	    if(str[0] == '\r')
 		gotNl = true;
 	}
@@ -165,8 +181,8 @@ namespace ydd
     {
 	string httpVersion;
 	unsigned int statusCode;
-	istr >> httpVersion;
-	istr >> statusCode;
+	istr >> httpVersion; /* throws istream::failure */
+	istr >> statusCode; /* throws istream::failure */
 
 	if(httpVersion != "HTTP/1.1")
 	{
@@ -185,11 +201,11 @@ namespace ydd
     {
 	string line;
 	ssize_t chunkSize;
-	vector<char> buf;
+	vector<char> buf; /* operations on buf may throw memory-related exception */
 	jsonResponse_ = "";
 	do
 	{
-	    getline(istr, line);
+	    getline(istr, line); /* throws istream::failure */
 	    chunkSize = parseChunkSize(line);
 	    if((chunkSize > 0) && istr)
 	    {
@@ -197,7 +213,7 @@ namespace ydd
 		{
 		    buf.resize(chunkSize * 2);
 		}
-		istr.read(&buf[0], chunkSize);
+		istr.read(&buf[0], chunkSize); /* throws istream::failure */
 		getline(istr, line); // chunkSize doesn't include terminating \r\n 
 		jsonResponse_.append(buf.begin(), buf.begin() + chunkSize);
 	    }

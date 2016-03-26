@@ -34,5 +34,4 @@ namespace ydd
 		useSandbox ? YdRemote::hostSandbox : YdRemote::host, YdRemote::port);
 	return resolver.resolve(query);
     }
-
 }
