@@ -2,24 +2,34 @@
 #include "general.h"
 #include <boost/bind.hpp>
 #include <iostream>
+#include "ydrequest.h"
 
 using namespace boost::asio;
 using namespace std;
 
 namespace ydd
 {
-    YdClient::YdClient(ydd::YdRequest& request, io_service& ios, bool useSandbox) :
+    YdClient::YdClient(YdRequest* request, io_service& ios, bool useSandbox) :
 	socket_(ios, YdRemote::ctx),
 	hostIt_(useSandbox ? YdRemote::hostSandboxIt : YdRemote::hostIt),
-	request_(request),
 	useSandbox_(useSandbox),
 	httpRequestHeader_(useSandbox ? YdRemote::httpHeaderSandbox : YdRemote::httpHeader),
 	state_(inProgress)
     {
+    }
+
+    void YdClient::start(YdRequest* request)
+    {
+	if(request == NULL)
+	{
+	    msyslog(LOG_ERR, "Trying to start YdClient with NULL request");
+	    return;
+	}
+	request_ = request;
 	httpRequest_ += httpRequestHeader_;
-	httpRequest_ += to_string(request_.get().length()) + "\r\n";
+	httpRequest_ += to_string(request_->get().length()) + "\r\n";
 	httpRequest_ += "Connection: close\r\n\r\n";
-	httpRequest_ += request_.get() + "\r\n";
+	httpRequest_ += request_->get() + "\r\n";
 
 	async_connect(
 		socket_.lowest_layer(), 
@@ -32,10 +42,10 @@ namespace ydd
 		);
     }
 
-    YdClient::Pointer YdClient::create(ydd::YdRequest& request, io_service& ios, bool useSandbox)
+    /*YdClient::Pointer YdClient::create(ydd::YdRequest& request, io_service& ios, bool useSandbox)
     {
 	return YdClient::Pointer(new YdClient(request, ios, useSandbox));
-    }
+    }*/
 
     void YdClient::handleConnect(const boost::system::error_code& error)
     {
@@ -97,7 +107,7 @@ namespace ydd
 	    if(error == boost::asio::error::eof || isShortRead(error))
 	    {
 		parseHttpResponse();
-		request_.processResult();
+		request_->processResult();
 	    }
 	    else
 	    {
