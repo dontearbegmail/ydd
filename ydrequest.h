@@ -59,6 +59,8 @@ namespace ydd
 	    boost::property_tree::ptree ptRequest_;
 	    boost::property_tree::ptree ptResponse_;
 
+	    virtual void generateRequest() = 0;
+
 	    void fetchError();
 	    static bool getLongNode(boost::property_tree::ptree& pt, const char* path, long& val);
 	    static bool getStringNode(boost::property_tree::ptree& pt, const char* path, std::string& val);

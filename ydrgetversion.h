@@ -13,7 +13,7 @@ namespace ydd
 	    virtual void processResult();
 	    bool getVersion(long& version);
 	protected:
-	    void generateRequest();
+	    virtual void generateRequest();
 	    long version_;
     };
 }

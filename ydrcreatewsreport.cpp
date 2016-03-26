@@ -37,7 +37,6 @@ namespace ydd
 
     void YdrCreateWsReport::run()
     {
-	generateRequest();
 	YdRequest::run();
     }
 

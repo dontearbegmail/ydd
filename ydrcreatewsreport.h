@@ -19,7 +19,7 @@ namespace ydd
 	protected:
 	    Phrases& phrases_;
 	    GeoId& geoId_;
-	    void generateRequest();
+	    virtual void generateRequest();
     };
 }
 

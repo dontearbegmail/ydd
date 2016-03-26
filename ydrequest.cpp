@@ -21,6 +21,7 @@ namespace ydd
 
     void YdRequest::run()
     {
+	generateRequest();
 	state_ = initError;
 	try
 	{

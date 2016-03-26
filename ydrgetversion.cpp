@@ -16,7 +16,6 @@ namespace ydd
 
     void YdrGetVersion::run()
     {
-	generateRequest();
 	YdRequest::run();
     }
 
