@@ -18,7 +18,6 @@ int main()
 
     try
     {
-
 	std::string request = "{\"method\":\"GetAvailableVersions\","
 	    "\"locale\":\"ru\",\"token\":\"c9f13bf86c694e629440c6d56dd29b1e\"}";
 
@@ -29,6 +28,8 @@ int main()
 	//t.async_wait(&timerHandler);
 	
 	io_service.run();
+
+	cout << r.getJsonResponse() << endl;
     }
     catch (std::exception& e)
     {

@@ -31,7 +31,7 @@ namespace ydd
 	    msyslog(LOG_ERR, "Got an exception while trying to generate a JSON request: %s", e.what());
 	    return;
 	}
-	//ydClient_ = YdClient::create(*this, ios_, useSandbox_);
+	ydClient_.run();
     }
 
     void YdRequest::processResult()
@@ -41,6 +41,11 @@ namespace ydd
     string& YdRequest::get()
     {
 	return request_;
+    }
+
+    const string& YdRequest::getJsonResponse()
+    {
+	return ydClient_.getJsonResponse();
     }
 
 }

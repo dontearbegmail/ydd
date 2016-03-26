@@ -19,7 +19,7 @@ namespace ydd
     {
     }
 
-    void YdClient::start()
+    void YdClient::run()
     {
 	httpRequest_ += httpRequestHeader_;
 	httpRequest_ += to_string(request_.get().length()) + "\r\n";
@@ -36,11 +36,6 @@ namespace ydd
 		    )
 		);
     }
-
-    /*YdClient::Pointer YdClient::create(ydd::YdRequest& request, io_service& ios, bool useSandbox)
-    {
-	return YdClient::Pointer(new YdClient(request, ios, useSandbox));
-    }*/
 
     void YdClient::handleConnect(const boost::system::error_code& error)
     {

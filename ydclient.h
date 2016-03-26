@@ -17,7 +17,7 @@ namespace ydd
 
 	    YdClient(YdRequest& request, boost::asio::io_service& ios, bool useSandbox);
 
-	    void start();
+	    void run();
 	    void handleConnect(const boost::system::error_code& error);
 	    void handleHandshake(const boost::system::error_code& error);
 	    void handleWrite(const boost::system::error_code& error);

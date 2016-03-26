@@ -1,5 +1,4 @@
 #include "ydrgetversion.h"
-#include <iostream>
 
 namespace ydd
 {
@@ -14,10 +13,5 @@ namespace ydd
 	ptRequest_.put("method", "GetVersion");
 	ptRequest_.put("locale", locale_);
 	ptRequest_.put("token", token_);
-    }
-
-    void YdrGetVersion::processResult()
-    {
-	std::cout << ydClient_.getJsonResponse() << std::endl;
     }
 }

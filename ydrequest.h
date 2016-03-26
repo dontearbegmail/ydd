@@ -14,6 +14,7 @@ namespace ydd
 	    virtual void run();
 	    virtual void processResult();
 	    std::string& get();
+	    const std::string& getJsonResponse();
 	protected:
 	    std::string token_;
 	    boost::asio::io_service& ios_;
