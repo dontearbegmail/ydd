@@ -8,7 +8,6 @@ void timerHandler(const boost::system::error_code& /*e*/)
 {
 }
 
-
 int main()
 {
     using namespace ydd;
@@ -35,7 +34,11 @@ int main()
 	    r.getYdErrorString(es);
 	    cout << es << endl;
 	}
-	cout << r.getJsonResponse() << endl;
+	long version;
+	if(r.getVersion(version))
+	    cout << "Version: " << version << endl;
+	else
+	    cout << "Failed to get version: " << version << endl;
     }
     catch (std::exception& e)
     {

@@ -10,8 +10,11 @@ namespace ydd
 	public:
 	    YdrGetVersion(std::string& token, boost::asio::io_service& ios, bool useSandbox);
 	    virtual void run();
+	    virtual void processResult();
+	    bool getVersion(long& version);
 	protected:
 	    void generateRequest();
+	    long version_;
     };
 }
 

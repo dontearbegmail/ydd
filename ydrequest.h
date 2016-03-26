@@ -25,7 +25,9 @@ namespace ydd
 			   completion of the requestd YD operation, i.e. for example
 			   ptResponse may contain an error status from YD */
 		ydError,
-		ydNoError
+		ydNoError,
+		ydDataParseError,
+		ydOk
 	    };
 
 	    typedef struct 
@@ -58,6 +60,8 @@ namespace ydd
 	    boost::property_tree::ptree ptResponse_;
 
 	    void fetchError();
+	    static bool getLongNode(boost::property_tree::ptree& pt, const char* path, long& val);
+	    static bool getStringNode(boost::property_tree::ptree& pt, const char* path, std::string& val);
     };
 }
 

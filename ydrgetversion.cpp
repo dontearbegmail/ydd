@@ -19,4 +19,31 @@ namespace ydd
 	generateRequest();
 	YdRequest::run();
     }
+
+    bool YdrGetVersion::getVersion(long& version)
+    {
+	if(state_ == YdRequest::ydOk)
+	{
+	    version = version_;
+	    return true;
+	}
+	return false;
+    }
+
+    void YdrGetVersion::processResult()
+    {
+	YdRequest::processResult();
+	if(state_ != ydNoError)
+	    return;
+	long v;
+	if(YdRequest::getLongNode(ptResponse_, "data", v))
+	{
+	    version_ = v;
+	    state_ = ydOk;
+	}
+	else
+	{
+	    state_ = ydDataParseError;
+	}
+    }
 }
