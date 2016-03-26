@@ -9,27 +9,22 @@ using namespace std;
 
 namespace ydd
 {
-    YdClient::YdClient(YdRequest* request, io_service& ios, bool useSandbox) :
+    YdClient::YdClient(YdRequest& request, io_service& ios, bool useSandbox) :
 	socket_(ios, YdRemote::ctx),
 	hostIt_(useSandbox ? YdRemote::hostSandboxIt : YdRemote::hostIt),
+	request_(request),
 	useSandbox_(useSandbox),
 	httpRequestHeader_(useSandbox ? YdRemote::httpHeaderSandbox : YdRemote::httpHeader),
 	state_(inProgress)
     {
     }
 
-    void YdClient::start(YdRequest* request)
+    void YdClient::start()
     {
-	if(request == NULL)
-	{
-	    msyslog(LOG_ERR, "Trying to start YdClient with NULL request");
-	    return;
-	}
-	request_ = request;
 	httpRequest_ += httpRequestHeader_;
-	httpRequest_ += to_string(request_->get().length()) + "\r\n";
+	httpRequest_ += to_string(request_.get().length()) + "\r\n";
 	httpRequest_ += "Connection: close\r\n\r\n";
-	httpRequest_ += request_->get() + "\r\n";
+	httpRequest_ += request_.get() + "\r\n";
 
 	async_connect(
 		socket_.lowest_layer(), 
@@ -107,7 +102,7 @@ namespace ydd
 	    if(error == boost::asio::error::eof || isShortRead(error))
 	    {
 		parseHttpResponse();
-		request_->processResult();
+		request_.processResult();
 	    }
 	    else
 	    {

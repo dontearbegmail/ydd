@@ -15,9 +15,9 @@ namespace ydd
 	public: 
 	    typedef enum {inProgress, failed, ok} State;
 
-	    YdClient(YdRequest* request, boost::asio::io_service& ios, bool useSandbox);
+	    YdClient(YdRequest& request, boost::asio::io_service& ios, bool useSandbox);
 
-	    void start(YdRequest* request);
+	    void start();
 	    void handleConnect(const boost::system::error_code& error);
 	    void handleHandshake(const boost::system::error_code& error);
 	    void handleWrite(const boost::system::error_code& error);
@@ -28,7 +28,7 @@ namespace ydd
 	private:
 	    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket_;
 	    boost::asio::ip::tcp::resolver::iterator& hostIt_;
-	    YdRequest* request_;
+	    YdRequest& request_;
 	    bool useSandbox_;
 	    const std::string& httpRequestHeader_;
 	    std::string httpRequest_;

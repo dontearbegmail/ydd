@@ -12,7 +12,7 @@ namespace ydd
 	token_(token),
 	ios_(ios),
 	useSandbox_(useSandbox),
-	ydClient_(this, ios, useSandbox)
+	ydClient_(*this, ios, useSandbox)
     {
     }
 
