@@ -29,7 +29,6 @@ namespace ydd
 	    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket_;
 	    boost::asio::ip::tcp::resolver::iterator& hostIt_;
 	    YdRequest& request_;
-	    bool useSandbox_;
 	    const std::string& httpRequestHeader_;
 	    std::string httpRequest_;
 	    boost::asio::streambuf httpResponse_;

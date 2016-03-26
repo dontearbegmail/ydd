@@ -29,6 +29,12 @@ int main()
 	
 	io_service.run();
 
+	if(r.getState() == YdRequest::ydError)
+	{
+	    string es;
+	    r.getYdErrorString(es);
+	    cout << es << endl;
+	}
 	cout << r.getJsonResponse() << endl;
     }
     catch (std::exception& e)

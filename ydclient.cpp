@@ -13,7 +13,6 @@ namespace ydd
 	socket_(ios, YdRemote::ctx),
 	hostIt_(useSandbox ? YdRemote::hostSandboxIt : YdRemote::hostIt),
 	request_(request),
-	useSandbox_(useSandbox),
 	httpRequestHeader_(useSandbox ? YdRemote::httpHeaderSandbox : YdRemote::httpHeader),
 	state_(inProgress)
     {
