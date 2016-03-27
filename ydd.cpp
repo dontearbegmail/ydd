@@ -3,6 +3,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <sstream>
 #include "ydrcreatewsreport.h"
+#include "ydrgetwsreportlist.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -44,8 +45,9 @@ int main()
 	boost::asio::io_service io_service;
 	YdrCreateWsReport::Phrases phrases = {"гипсокартон", "плитка", "саморезы"};
 	YdrCreateWsReport::GeoId geoId;
-	YdrCreateWsReport r(token, phrases, geoId, io_service, true);
-	//r.run();
+	//YdrCreateWsReport r(token, phrases, geoId, io_service, true);
+	YdrGetWsReportList r(token, io_service, true);
+	r.run();
 	//boost::asio::deadline_timer t(io_service, boost::posix_time::seconds(50));
 	//t.async_wait(&timerHandler);
 	
@@ -60,6 +62,14 @@ int main()
 	else 
 	{
 	    cout << r.getJsonResponse() << endl;
+	    
+	    /* YdrGetWsReportList output */
+	    YdrGetWsReportList::ReportList& rl = r.getReportList();
+	    for(YdrGetWsReportList::ReportList::iterator it = rl.begin();
+		    it != rl.end(); ++it)
+	    {
+		cout << it->id << " : " << it->status << endl;
+	    }
 	}
     }
     catch (std::exception& e)
