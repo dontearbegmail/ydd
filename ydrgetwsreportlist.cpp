@@ -30,7 +30,7 @@ namespace ydd
 	    return;
 	reportList_.clear();
 	bool idOk = false, statusOk = false;
-	long id;
+	YdRemote::ReportIdType id;
 	std::string strStatus;
 	ReportStatus status;
 	ReportStatusInfo sti;
@@ -39,8 +39,8 @@ namespace ydd
 	    BOOST_FOREACH(ptree::value_type& v, ptResponse_.get_child("data"))
 	    {
 		// v.second contains subtree {"StatusReport":"Done","ReportID":"nnnn"}
-		idOk = YdRequest::getLongNode(v.second, "ReportID", id);
-		statusOk = YdRequest::getStringNode(v.second, "StatusReport", strStatus);
+		idOk = YdRequest::getNodeVal<YdRemote::ReportIdType>(v.second, "ReportID", id);
+		statusOk = YdRequest::getNodeVal<std::string>(v.second, "StatusReport", strStatus);
 		if(statusOk)
 		{
 		    if(strStatus == "Done")

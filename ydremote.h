@@ -10,6 +10,7 @@ namespace ydd
     class YdRemote
     {
 	public:
+	    typedef unsigned long ReportIdType;
 	    static const std::string host;
 	    static const std::string hostSandbox;
 	    static const std::string port;

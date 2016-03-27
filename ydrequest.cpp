@@ -134,49 +134,4 @@ namespace ydd
 	errStr.append("\"");
     }
 
-    bool YdRequest::getLongNode(boost::property_tree::ptree& pt, const char* path, long& val)
-    {
-	using namespace boost::property_tree;
-	bool fetchOk = false;
-	long t;
-	try
-	{
-	    t = pt.get<long>(path);
-	    fetchOk = true;
-	}
-	catch(ptree_bad_data&)
-	{
-	    msyslog(LOG_ERR, "Got ptree_bad_data when requesting node at address %s", path);
-	}
-	catch(ptree_bad_path&)
-	{
-	    msyslog(LOG_ERR, "Got ptree_bad_path when requesting node at address %s", path);
-	}
-	if(fetchOk)
-	    val = t;
-	return fetchOk;
-    }
-
-    bool YdRequest::getStringNode(boost::property_tree::ptree& pt, const char* path, std::string& val)
-    {
-	using namespace boost::property_tree;
-	bool fetchOk = false;
-	std::string t;
-	try
-	{
-	    t = pt.get<std::string>(path);
-	    fetchOk = true;
-	}
-	catch(ptree_bad_data&)
-	{
-	    msyslog(LOG_ERR, "Got ptree_bad_data when requesting node at address %s", path);
-	}
-	catch(ptree_bad_path&)
-	{
-	    msyslog(LOG_ERR, "Got ptree_bad_path when requesting node at address %s", path);
-	}
-	if(fetchOk)
-	    val = t;
-	return fetchOk;
-    }
 }

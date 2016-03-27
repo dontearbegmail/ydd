@@ -4,12 +4,14 @@
 #include <sstream>
 #include "ydrcreatewsreport.h"
 #include "ydrgetwsreportlist.h"
+#include "ydrdeletewsreport.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 void timerHandler(const boost::system::error_code& /*e*/)
 {
+    std::cout << "Timer" << std::endl;
 }
 
 int main()
@@ -48,8 +50,11 @@ int main()
 	//YdrCreateWsReport r(token, phrases, geoId, io_service, true);
 	YdrGetWsReportList r(token, io_service, true);
 	r.run();
-	//boost::asio::deadline_timer t(io_service, boost::posix_time::seconds(50));
-	//t.async_wait(&timerHandler);
+	boost::asio::deadline_timer t(io_service, boost::posix_time::seconds(1));
+	t.async_wait(&timerHandler);
+
+	YdrDeleteWsReport d(token, 16443, io_service, true);
+	d.run();
 	
 	io_service.run();
 
@@ -70,6 +75,18 @@ int main()
 	    {
 		cout << it->id << " : " << it->status << endl;
 	    }
+	}
+
+	if(r.getState() == YdRequest::ydError)
+	{
+	    string es;
+	    d.getYdErrorString(es);
+	    cout << es << endl;
+	}
+	else 
+	{
+	    cout << d.getJsonResponse() << endl;
+	    cout << "YdResult: " << d.getYdResult() << endl;
 	}
     }
     catch (std::exception& e)

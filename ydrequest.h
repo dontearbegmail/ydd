@@ -4,6 +4,7 @@
 #include "ydclient.h"
 #include <string>
 #include <boost/property_tree/ptree.hpp>
+#include "general.h"
 
 namespace ydd
 {
@@ -62,8 +63,29 @@ namespace ydd
 	    virtual void generateRequest() = 0;
 
 	    void fetchError();
-	    static bool getLongNode(boost::property_tree::ptree& pt, const char* path, long& val);
-	    static bool getStringNode(boost::property_tree::ptree& pt, const char* path, std::string& val);
+	    template<typename T>
+		bool getNodeVal(boost::property_tree::ptree& pt, const char* path, T& val)
+		{
+		    using namespace boost::property_tree;
+		    bool fetchOk = false;
+		    T t;
+		    try
+		    {
+			t = pt.get<T>(path);
+			fetchOk = true;
+		    }
+		    catch(ptree_bad_data&)
+		    {
+			msyslog(LOG_ERR, "Got ptree_bad_data when requesting node at address %s", path);
+		    }
+		    catch(ptree_bad_path&)
+		    {
+			msyslog(LOG_ERR, "Got ptree_bad_path when requesting node at address %s", path);
+		    }
+		    if(fetchOk)
+			val = t;
+		    return fetchOk;
+		}
     };
 }
 

@@ -12,7 +12,7 @@ namespace ydd
 	    enum ReportStatus {Done, Pending, Failed};
 	    struct ReportStatusInfo
 	    {
-		unsigned long id;
+		YdRemote::ReportIdType id;
 		ReportStatus status;
 	    };
 	    typedef std::vector<ReportStatusInfo> ReportList;

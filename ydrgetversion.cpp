@@ -35,7 +35,7 @@ namespace ydd
 	if(state_ != ydNoError)
 	    return;
 	long v;
-	if(YdRequest::getLongNode(ptResponse_, "data", v))
+	if(YdRequest::getNodeVal<long>(ptResponse_, "data", v))
 	{
 	    version_ = v;
 	    state_ = ydOk;
