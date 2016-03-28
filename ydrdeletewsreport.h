@@ -14,7 +14,8 @@ namespace ydd
 		    YdProcess::Callback ydProcessCallback);
 	    virtual void run();
 	    virtual void processResult();
-	    long getYdResult();
+	    bool isDeleted();
+	    YdRemote::ReportIdType getReportId();
 	protected:
 	    YdRemote::ReportIdType reportId_;
 	    long ydResult_;

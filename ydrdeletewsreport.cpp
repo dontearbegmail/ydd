@@ -46,8 +46,13 @@ namespace ydd
 	runYdProcessCallback();
     }
 
-    long YdrDeleteWsReport::getYdResult()
+    bool YdrDeleteWsReport::isDeleted()
     {
-	return ydResult_;
+	return ydResult_ == 1;
+    }
+
+    YdRemote::ReportIdType YdrDeleteWsReport::getReportId()
+    {
+	return reportId_;
     }
 }

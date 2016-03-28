@@ -36,8 +36,10 @@ namespace ydd
 	std::string strStatus;
 	ReportStatus status;
 	ReportStatusInfo sti;
+	bool isEmpty = false;
 	try
 	{
+	    isEmpty = ptResponse_.get_child("data").empty();
 	    BOOST_FOREACH(ptree::value_type& v, ptResponse_.get_child("data"))
 	    {
 		// v.second contains subtree {"StatusReport":"Done","ReportID":"nnnn"}
@@ -71,7 +73,7 @@ namespace ydd
 	    idOk = false;
 	    msyslog(LOG_ERR, "JSON parse expcetion: %s", e.what());
 	}
-	if(!idOk || !statusOk)
+	if((!idOk || !statusOk) && !isEmpty)
 	    state_ = ydDataParseError;
 	else
 	    state_ = ydOk;
