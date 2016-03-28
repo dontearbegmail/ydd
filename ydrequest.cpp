@@ -21,6 +21,10 @@ namespace ydd
 	ydError_.error_detail = "";
     }
 
+    YdRequest::~YdRequest()
+    {
+    }
+
     void YdRequest::run()
     {
 	generateRequest();

@@ -41,6 +41,7 @@ namespace ydd
 
 	    YdRequest(std::string& token, boost::asio::io_service& ios, bool useSandbox,
 		    YdProcess::Callback ydProcessCallback);
+	    virtual ~YdRequest();
 	    virtual void run();
 	    virtual void processResult();
 	    State getState();

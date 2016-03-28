@@ -2,6 +2,7 @@
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <sstream>
+#include "ydrequest.h"
 #include "ydrcreatewsreport.h"
 #include "ydrgetwsreportlist.h"
 #include "ydrdeletewsreport.h"
@@ -14,74 +15,96 @@ void timerHandler(const boost::system::error_code& /*e*/)
     std::cout << "Timer" << std::endl;
 }
 
-class YdProcess1 : public YdProcess
+namespace ydd
 {
-    public:
-	void step1Handler() {}
-};
+
+    class DeleteOldReports : public YdProcess
+    {
+	public:
+	    DeleteOldReports(std::string& token, boost::asio::io_service& ios);
+	    ~DeleteOldReports();
+	    void resetCurrentRequest();
+	    void run();
+	    void step1Handler();
+	    void step2Handler();
+	protected:
+	    boost::asio::io_service& ios_;
+	    std::string token_;
+	    YdRequest* currentRequest_;
+    };
+
+    DeleteOldReports::DeleteOldReports(std::string& token, boost::asio::io_service& ios) :
+	ios_(ios),
+	token_(token),
+	currentRequest_(NULL)
+    {
+    }
+
+    DeleteOldReports::~DeleteOldReports()
+    {
+	resetCurrentRequest();
+    }
+
+    void DeleteOldReports::resetCurrentRequest()
+    {
+	if(currentRequest_ != NULL)
+	{
+	    delete currentRequest_;
+	    currentRequest_ = NULL;
+	}
+    }
+
+    void DeleteOldReports::run()
+    {
+	currentRequest_ = new YdrGetWsReportList(token_, ios_, true,
+		boost::bind(&DeleteOldReports::step1Handler, this));
+	ios_.post(boost::bind(&YdRequest::run, currentRequest_));
+    }
+
+    void DeleteOldReports::step1Handler()
+    {
+	using namespace std;
+	YdrGetWsReportList* r = dynamic_cast<YdrGetWsReportList*>(currentRequest_);
+	if(r->getState() == YdRequest::ydOk)
+	{
+	    YdrGetWsReportList::ReportList rl = r->getReportList();
+	    if(rl.size() == 0)
+	    {
+		cout << "There are no reports in your accout" << endl;
+	    }
+	    else
+	    {
+		cout << "There are the following " << rl.size() << " report(s) in your "
+		    "account: " << endl;
+		for(YdrGetWsReportList::ReportList::iterator it = rl.begin();
+			it != rl.end(); ++it)
+		{
+		    cout << "Id: " << it->id << ", Status: " << it->status << endl;
+		}
+	    }
+	}
+	resetCurrentRequest();
+    }
+
+    void DeleteOldReports::step2Handler()
+    {
+    }
+
+}
 
 int main()
 {
     using namespace ydd;
     using namespace std;
 
-    /*using namespace boost::property_tree;
-    ptree pt;
-    ptree child, subarr;
-
-    child.put("", "превед");
-    subarr.push_back(std::make_pair("", child));
-    child.put("", "кагдила");
-    subarr.push_back(std::make_pair("", child));
-    pt.add_child("Phrases", subarr);
-
-    ostringstream buf; 
-    write_json(buf, pt, false);
-    string json = buf.str();
-
-    cout << json << endl;
-
-    cout << json.length() << endl;*/
-
     string token = "c9f13bf86c694e629440c6d56dd29b1e";
 
     try
     {
-	std::string request = "{\"method\":\"GetAvailableVersions\","
-	    "\"locale\":\"ru\",\"token\":\"c9f13bf86c694e629440c6d56dd29b1e\"}";
-
 	boost::asio::io_service io_service;
-	YdrCreateWsReport::Phrases phrases = {"гипсокартон", "плитка", "саморезы"};
-	YdrCreateWsReport::GeoId geoId;
-	YdrCreateWsReport r(token, phrases, geoId, io_service, true, NULL);
-	//YdrGetWsReportList r(token, io_service, true, NULL);
-	r.run();
-
-	YdrDeleteWsReport d(token, 16443, io_service, true, NULL);
-	d.run();
-	
+	DeleteOldReports dro(token, io_service);
+	io_service.post(boost::bind(&DeleteOldReports::run, &dro));
 	io_service.run();
-
-	if(r.getState() == YdRequest::ydError)
-	{
-	    string es;
-	    r.getYdErrorString(es);
-	    cout << es << endl;
-	}
-	else 
-	{
-	    cout << r.getJsonResponse() << endl;
-	    
-	    cout << "New report id: " << r.getReportId() << endl;
-	    /* YdrGetWsReportList output */
-	    /*YdrGetWsReportList::ReportList& rl = r.getReportList();
-	    for(YdrGetWsReportList::ReportList::iterator it = rl.begin();
-		    it != rl.end(); ++it)
-	    {
-		cout << it->id << " : " << it->status << endl;
-	    }*/
-	}
-
     }
     catch (std::exception& e)
     {
