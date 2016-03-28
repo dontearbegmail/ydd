@@ -45,6 +45,22 @@ namespace ydd
     {
 	YdRequest::processResult();
 
+	YdRemote::ReportIdType reportId;
+	if(getNodeVal<YdRemote::ReportIdType>(ptResponse_, "data", reportId))
+	{
+	    reportId_ = reportId;
+	    state_ = ydOk;
+	}
+	else
+	{
+	    state_ = ydDataParseError;
+	}
+
 	runYdProcessCallback();
+    }
+
+    YdRemote::ReportIdType YdrCreateWsReport::getReportId()
+    {
+	return reportId_;
     }
 }

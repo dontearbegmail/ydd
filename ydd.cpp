@@ -53,12 +53,9 @@ int main()
 	boost::asio::io_service io_service;
 	YdrCreateWsReport::Phrases phrases = {"гипсокартон", "плитка", "саморезы"};
 	YdrCreateWsReport::GeoId geoId;
-	//YdrCreateWsReport r(token, phrases, geoId, io_service, true);
-	YdProcess1 p1;
-	YdrGetWsReportList r(token, io_service, true, boost::bind(&YdProcess1::step1Handler, &p1));
+	YdrCreateWsReport r(token, phrases, geoId, io_service, true, NULL);
+	//YdrGetWsReportList r(token, io_service, true, NULL);
 	r.run();
-	boost::asio::deadline_timer t(io_service, boost::posix_time::seconds(1));
-	t.async_wait(&timerHandler);
 
 	YdrDeleteWsReport d(token, 16443, io_service, true, NULL);
 	d.run();
@@ -75,26 +72,16 @@ int main()
 	{
 	    cout << r.getJsonResponse() << endl;
 	    
+	    cout << "New report id: " << r.getReportId() << endl;
 	    /* YdrGetWsReportList output */
-	    YdrGetWsReportList::ReportList& rl = r.getReportList();
+	    /*YdrGetWsReportList::ReportList& rl = r.getReportList();
 	    for(YdrGetWsReportList::ReportList::iterator it = rl.begin();
 		    it != rl.end(); ++it)
 	    {
 		cout << it->id << " : " << it->status << endl;
-	    }
+	    }*/
 	}
 
-	if(r.getState() == YdRequest::ydError)
-	{
-	    string es;
-	    d.getYdErrorString(es);
-	    cout << es << endl;
-	}
-	else 
-	{
-	    cout << d.getJsonResponse() << endl;
-	    cout << "YdResult: " << d.getYdResult() << endl;
-	}
     }
     catch (std::exception& e)
     {

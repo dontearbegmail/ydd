@@ -17,9 +17,13 @@ namespace ydd
 		    YdProcess::Callback ydProcessCallback);
 	    virtual void run();
 	    virtual void processResult();
+	    YdRemote::ReportIdType getReportId();
 	protected:
 	    Phrases& phrases_;
 	    GeoId& geoId_;
+
+	    YdRemote::ReportIdType reportId_;
+
 	    virtual void generateRequest();
     };
 }
