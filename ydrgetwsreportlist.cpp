@@ -5,8 +5,10 @@
 
 namespace ydd
 {
-    YdrGetWsReportList::YdrGetWsReportList(std::string& token, boost::asio::io_service& ios, bool useSandbox) :
-	YdRequest(token, ios, useSandbox)
+    YdrGetWsReportList::YdrGetWsReportList(std::string& token, 
+	    boost::asio::io_service& ios, bool useSandbox,
+	    YdProcess::Callback ydProcessCallback) :
+	YdRequest(token, ios, useSandbox, ydProcessCallback)
     {
     }
 
@@ -73,6 +75,8 @@ namespace ydd
 	    state_ = ydDataParseError;
 	else
 	    state_ = ydOk;
+
+	runYdProcessCallback();
     }
 
     YdrGetWsReportList::ReportList& YdrGetWsReportList::getReportList()

@@ -6,8 +6,8 @@ namespace ydd
 {
     YdrDeleteWsReport::YdrDeleteWsReport(std::string& token, 
 	    YdRemote::ReportIdType reportId, boost::asio::io_service& ios, 
-	    bool useSandbox) :
-	YdRequest(token, ios, useSandbox),
+	    bool useSandbox, YdProcess::Callback ydProcessCallback) :
+	YdRequest(token, ios, useSandbox, ydProcessCallback),
 	reportId_(reportId),
 	ydResult_(0)
     {
@@ -43,6 +43,7 @@ namespace ydd
 	{
 	    state_ = ydDataParseError;
 	}
+	runYdProcessCallback();
     }
 
     long YdrDeleteWsReport::getYdResult()

@@ -10,7 +10,8 @@ namespace ydd
     {
 	public:
 	    YdrDeleteWsReport(std::string& token, YdRemote::ReportIdType reportId,
-		    boost::asio::io_service& ios, bool useSandbox);
+		    boost::asio::io_service& ios, bool useSandbox,
+		    YdProcess::Callback ydProcessCallback);
 	    virtual void run();
 	    virtual void processResult();
 	    long getYdResult();

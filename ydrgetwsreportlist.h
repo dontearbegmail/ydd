@@ -17,7 +17,8 @@ namespace ydd
 	    };
 	    typedef std::vector<ReportStatusInfo> ReportList;
 
-	    YdrGetWsReportList(std::string& token, boost::asio::io_service& ios, bool useSandbox);
+	    YdrGetWsReportList(std::string& token, boost::asio::io_service& ios, bool useSandbox,
+		    YdProcess::Callback ydProcessCallback);
 	    virtual void run();
 	    virtual void processResult();
 	    ReportList& getReportList();

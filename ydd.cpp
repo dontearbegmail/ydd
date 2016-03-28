@@ -14,6 +14,12 @@ void timerHandler(const boost::system::error_code& /*e*/)
     std::cout << "Timer" << std::endl;
 }
 
+class YdProcess1 : public YdProcess
+{
+    public:
+	void step1Handler() {}
+};
+
 int main()
 {
     using namespace ydd;
@@ -48,12 +54,13 @@ int main()
 	YdrCreateWsReport::Phrases phrases = {"гипсокартон", "плитка", "саморезы"};
 	YdrCreateWsReport::GeoId geoId;
 	//YdrCreateWsReport r(token, phrases, geoId, io_service, true);
-	YdrGetWsReportList r(token, io_service, true);
+	YdProcess1 p1;
+	YdrGetWsReportList r(token, io_service, true, boost::bind(&YdProcess1::step1Handler, &p1));
 	r.run();
 	boost::asio::deadline_timer t(io_service, boost::posix_time::seconds(1));
 	t.async_wait(&timerHandler);
 
-	YdrDeleteWsReport d(token, 16443, io_service, true);
+	YdrDeleteWsReport d(token, 16443, io_service, true, NULL);
 	d.run();
 	
 	io_service.run();

@@ -7,12 +7,14 @@ using namespace std;
 
 namespace ydd
 {
-    YdRequest::YdRequest(string& token, boost::asio::io_service& ios, bool useSandbox) :
+    YdRequest::YdRequest(string& token, boost::asio::io_service& ios, bool useSandbox,
+	    YdProcess::Callback ydProcessCallback) :
 	token_(token),
 	ios_(ios),
 	useSandbox_(useSandbox),
 	ydClient_(*this, ios, useSandbox),
-	state_(init)
+	state_(init),
+	ydProcessCallback_(ydProcessCallback)
     {
 	ydError_.error_code = 0;
 	ydError_.error_str = "";
@@ -132,6 +134,14 @@ namespace ydd
 	errStr.append("\", error_detail = \"");
 	errStr.append(ydError_.error_detail);
 	errStr.append("\"");
+    }
+
+    void YdRequest::runYdProcessCallback()
+    {
+	if(!ydProcessCallback_.empty())
+	{
+	    ios_.post(ydProcessCallback_);
+	}
     }
 
 }

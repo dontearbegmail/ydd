@@ -5,6 +5,7 @@
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 #include "general.h"
+#include "ydprocess.h"
 
 namespace ydd
 {
@@ -38,7 +39,8 @@ namespace ydd
 		std::string error_str;
 	    } YdError;
 
-	    YdRequest(std::string& token, boost::asio::io_service& ios, bool useSandbox);
+	    YdRequest(std::string& token, boost::asio::io_service& ios, bool useSandbox,
+		    YdProcess::Callback ydProcessCallback);
 	    virtual void run();
 	    virtual void processResult();
 	    State getState();
@@ -59,6 +61,9 @@ namespace ydd
 
 	    boost::property_tree::ptree ptRequest_;
 	    boost::property_tree::ptree ptResponse_;
+
+	    YdProcess::Callback ydProcessCallback_;
+	    void runYdProcessCallback();
 
 	    virtual void generateRequest() = 0;
 

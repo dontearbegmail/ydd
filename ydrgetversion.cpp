@@ -2,8 +2,9 @@
 
 namespace ydd
 {
-    YdrGetVersion::YdrGetVersion(std::string& token, boost::asio::io_service& ios, bool useSandbox) :
-	YdRequest(token, ios, useSandbox)
+    YdrGetVersion::YdrGetVersion(std::string& token, boost::asio::io_service& ios, 
+	    bool useSandbox, YdProcess::Callback ydProcessCallback) :
+	YdRequest(token, ios, useSandbox, ydProcessCallback)
     {
     }
 
@@ -44,5 +45,6 @@ namespace ydd
 	{
 	    state_ = ydDataParseError;
 	}
+	runYdProcessCallback();
     }
 }

@@ -8,7 +8,8 @@ namespace ydd
     class YdrGetVersion : public YdRequest
     {
 	public:
-	    YdrGetVersion(std::string& token, boost::asio::io_service& ios, bool useSandbox);
+	    YdrGetVersion(std::string& token, boost::asio::io_service& ios, bool useSandbox,
+		    YdProcess::Callback ydProcessCallback);
 	    virtual void run();
 	    virtual void processResult();
 	    bool getVersion(long& version);

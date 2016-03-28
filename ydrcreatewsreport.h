@@ -13,7 +13,8 @@ namespace ydd
 	    typedef std::vector<std::string> Phrases;
 	    typedef std::vector<long> GeoId;
 	    YdrCreateWsReport(std::string& token, Phrases& phrases, GeoId& geoId, 
-		    boost::asio::io_service& ios, bool useSandbox);
+		    boost::asio::io_service& ios, bool useSandbox, 
+		    YdProcess::Callback ydProcessCallback);
 	    virtual void run();
 	    virtual void processResult();
 	protected:

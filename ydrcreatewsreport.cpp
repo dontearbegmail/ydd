@@ -3,8 +3,9 @@
 namespace ydd
 {
     YdrCreateWsReport::YdrCreateWsReport(std::string& token, Phrases& phrases, 
-	    GeoId& geoId, boost::asio::io_service& ios, bool useSandbox) :
-	YdRequest(token, ios, useSandbox),
+	    GeoId& geoId, boost::asio::io_service& ios, bool useSandbox,
+	    YdProcess::Callback ydProcessCallback) :
+	YdRequest(token, ios, useSandbox, ydProcessCallback),
 	phrases_(phrases),
 	geoId_(geoId)
     {
@@ -43,5 +44,7 @@ namespace ydd
     void YdrCreateWsReport::processResult()
     {
 	YdRequest::processResult();
+
+	runYdProcessCallback();
     }
 }
