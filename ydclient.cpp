@@ -96,7 +96,9 @@ namespace ydd
 	    if(error == boost::asio::error::eof || isShortRead(error))
 	    {
 		parseHttpResponse();
-		request_.processResult();
+		socket_.get_io_service().post(boost::bind(&YdRequest::processResult, &request_));
+		//request_.processResult();
+		
 	    }
 	    else
 	    {
