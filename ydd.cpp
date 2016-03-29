@@ -13,6 +13,9 @@ int main()
     using namespace ydd;
     using namespace std;
 
+    msyslog(LOG_INFO, "@1234_173025@ Another test");
+    msyslog(LOG_INFO, "Try me again");
+
     string token = "c9f13bf86c694e629440c6d56dd29b1e";
 
     // what is 'reactor pattern?
