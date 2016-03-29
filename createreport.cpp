@@ -1,11 +1,26 @@
 #include "deleteoldreports.h"
-#include <iostream>
 
 namespace ydd
 {
     DeleteOldReports::DeleteOldReports(std::string& token, boost::asio::io_service& ios) :
-	YdProcess(token, ios)
+	ios_(ios),
+	token_(token),
+	currentRequest_(NULL)
     {
+    }
+
+    DeleteOldReports::~DeleteOldReports()
+    {
+	resetCurrentRequest();
+    }
+
+    void DeleteOldReports::resetCurrentRequest()
+    {
+	if(currentRequest_ != NULL)
+	{
+	    delete currentRequest_;
+	    currentRequest_ = NULL;
+	}
     }
 
     void DeleteOldReports::run()

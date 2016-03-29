@@ -51,7 +51,7 @@ namespace ydd
 	    std::string& get();
 	    const std::string& getJsonResponse();
 	protected:
-	    std::string token_;
+	    std::string& token_;
 	    boost::asio::io_service& ios_;
 	    bool useSandbox_;
 	    std::string request_;
