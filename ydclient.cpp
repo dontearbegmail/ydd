@@ -97,8 +97,6 @@ namespace ydd
 	    {
 		parseHttpResponse();
 		socket_.get_io_service().post(boost::bind(&YdRequest::processResult, &request_));
-		//request_.processResult();
-		
 	    }
 	    else
 	    {

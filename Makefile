@@ -1,6 +1,6 @@
 .PHONY: all clean
 CPPFLAGS = -g -Wall -std=c++11 -D_GNU_SOURCE -lboost_system -lssl -lcrypto -lpthread
-SRCS = ydremote.cpp ydclient.cpp ydrequest.cpp ydrgetversion.cpp ydrcreatewsreport.cpp ydrgetwsreportlist.cpp ydrdeletewsreport.cpp
+SRCS = ydremote.cpp ydclient.cpp ydrequest.cpp ydrgetversion.cpp ydrcreatewsreport.cpp ydrgetwsreportlist.cpp ydrdeletewsreport.cpp deleteoldreports.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: ydd 
