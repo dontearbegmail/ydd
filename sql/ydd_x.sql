@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Mar 31, 2016 at 01:16 AM
+-- Generation Time: Mar 31, 2016 at 01:30 AM
 -- Server version: 5.5.48
 -- PHP Version: 5.4.38
 
@@ -18,7 +18,7 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_log_html_record`(IN `p_taskid` INT UNSIGNED, IN `p_type` TINYINT UNSIGNED, IN `p_message` VARCHAR(4096), IN `p_data` MEDIUMTEXT, OUT `p_result` TINYINT UNSIGNED)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_add_log_record`(IN `p_taskid` INT UNSIGNED, IN `p_type` TINYINT UNSIGNED, IN `p_message` VARCHAR(4096), IN `p_data` MEDIUMTEXT, OUT `p_result` TINYINT UNSIGNED)
         NO SQL
 	BEGIN
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
@@ -28,43 +28,48 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_log_html_record`(IN `p_taskid` I
 	SET p_result = 0;
 
 	INSERT INTO `tasks_logs_records`(`taskid`, `message`, `type`)
-    VALUES(p_taskid, p_message, p_type);
+	VALUES(p_taskid, p_message, p_type);
 
-    SET @rec_id = LAST_INSERT_ID();
+	IF (p_data IS NOT NULL) THEN
+	    SET @rec_id = LAST_INSERT_ID();
+		INSERT INTO `tasks_logs_html`(`recordid`, `data`)
+	    VALUES(@rec_id, p_data);
 
-    INSERT INTO `tasks_logs_html`(`recordid`, `data`)
-    VALUES(@rec_id, p_data);
+		UPDATE `tasks_logs_records`
+			SET `htmlid` = LAST_INSERT_ID()
+	    WHERE `id` = @rec_id;
+	    END IF;
 
-    UPDATE `tasks_logs_records`
-    SET `htmlid` = LAST_INSERT_ID()
-    WHERE `id` = @rec_id;
+	    SET p_result = 1;
+	    COMMIT;
+	    END$$
 
-    SET p_result = 1;
-    COMMIT;
-    END$$
+	    DELIMITER ;
 
-    DELIMITER ;
+	    -- --------------------------------------------------------
 
-    -- --------------------------------------------------------
+	    --
+	    -- Table structure for table `tasks_logs_html`
+	    --
 
-    --
-    -- Table structure for table `tasks_logs_html`
-    --
+	    CREATE TABLE IF NOT EXISTS `tasks_logs_html` (
+		      `recordid` int(10) unsigned NOT NULL,
+		        `data` mediumtext COLLATE utf8_unicode_ci NOT NULL,
+			  `id` int(10) unsigned NOT NULL
+		    ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-    CREATE TABLE IF NOT EXISTS `tasks_logs_html` (
-	      `recordid` int(10) unsigned NOT NULL,
-	        `data` mediumtext COLLATE utf8_unicode_ci NOT NULL,
-		  `id` int(10) unsigned NOT NULL
-	    ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+	    --
+	    -- Dumping data for table `tasks_logs_html`
+	    --
 
-    --
-    -- Dumping data for table `tasks_logs_html`
-    --
-
-    INSERT INTO `tasks_logs_html` (`recordid`, `data`, `id`) VALUES
-    (6, 'GET /v4/json/ HTTP/1.1\r\nHosts: api-sandbox.direct.yandex.ru\r\nConnection: close\r\n\r\n{"method":"GetVersion"}\r\n', 6),
-    (7, 'GET /v4/json/ HTTP/1.1\r\nHosts: api-sandbox.direct.yandex.ru\r\nConnection: close\r\n\r\n{"method":"GetVersion"}\r\n', 7),
-    (8, 'GET /v4/json/ HTTP/1.1\r\nHosts: api-sandbox.direct.yandex.ru\r\nConnection: close\r\n\r\n{"method":"GetVersion"}\r\n', 8);
+	    INSERT INTO `tasks_logs_html` (`recordid`, `data`, `id`) VALUES
+	    (6, 'GET /v4/json/ HTTP/1.1\r\nHosts: api-sandbox.direct.yandex.ru\r\nConnection: close\r\n\r\n{"method":"GetVersion"}\r\n', 6),
+	    (7, 'GET /v4/json/ HTTP/1.1\r\nHosts: api-sandbox.direct.yandex.ru\r\nConnection: close\r\n\r\n{"method":"GetVersion"}\r\n', 7),
+	    (8, 'GET /v4/json/ HTTP/1.1\r\nHosts: api-sandbox.direct.yandex.ru\r\nConnection: close\r\n\r\n{"method":"GetVersion"}\r\n', 8),
+	    (12, 'get /v4/json HTTP/1.1\r\n', 9),
+	    (13, 'get /v4/json HTTP/1.1\r\n', 10),
+	    (14, 'get /v4/json HTTP/1.1\r\n', 11),
+	    (15, 'get /v4/json HTTP/1.1\r\n', 12);
 
 -- --------------------------------------------------------
 
@@ -79,7 +84,7 @@ CREATE TABLE IF NOT EXISTS `tasks_logs_records` (
 	        `id` int(10) unsigned NOT NULL,
 		  `type` tinyint(3) unsigned NOT NULL COMMENT '0 - info, 1 - error, 2 - debug, 3 - warning',
 		    `htmlid` int(10) unsigned DEFAULT NULL
-	) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+	) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- Dumping data for table `tasks_logs_records`
@@ -89,7 +94,13 @@ INSERT INTO `tasks_logs_records` (`taskid`, `posted`, `message`, `id`, `type`, `
 (1, 0x323031362d30332d33302032313a33323a3036, 'Created request', 6, 0, 6),
     (1, 0x323031362d30332d33302032313a33323a3139, 'Created request', 7, 0, 7),
     (1, 0x323031362d30332d33302032313a33323a3235, 'Created request', 8, 0, 8),
-    (1, 0x323031362d30332d33302032313a34373a3234, 'Test', 10, 1, NULL);
+    (1, 0x323031362d30332d33302032313a34373a3234, 'Test', 10, 1, NULL),
+    (1, 0x323031362d30332d33302032323a32353a3237, 'No request', 11, 0, NULL),
+    (1, 0x323031362d30332d33302032323a32363a3035, 'Test request', 12, 0, 9),
+    (1, 0x323031362d30332d33302032323a32363a3137, 'Test request', 13, 0, 10),
+    (1, 0x323031362d30332d33302032323a32373a3232, 'Test request', 14, 0, 11),
+    (1, 0x323031362d30332d33302032323a32373a3533, 'New request', 15, 0, 12),
+    (1, 0x323031362d30332d33302032323a32383a3237, 'New request', 16, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -145,12 +156,12 @@ ALTER TABLE `tasks_phrases`
 -- AUTO_INCREMENT for table `tasks_logs_html`
 --
 ALTER TABLE `tasks_logs_html`
-  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=9;
+  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=13;
   --
   -- AUTO_INCREMENT for table `tasks_logs_records`
   --
   ALTER TABLE `tasks_logs_records`
-    MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=11;
+    MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=17;
     --
     -- AUTO_INCREMENT for table `tasks_phrases`
     --
