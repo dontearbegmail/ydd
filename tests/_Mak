@@ -1,0 +1,16 @@
+.PHONY: all clean
+CPPFLAGS = -g -Wall -std=c++11 -D_GNU_SOURCE -lboost_system -lboost_unit_test_framework
+SRCS = DbConn_test.cpp
+OBJS = $(SRCS:.cpp=.o)
+UPPEROBJS = ../dbconn.o
+
+all: tests 
+
+clean:
+	rm -rf ydd *.o
+
+tests: main.cpp $(OBJS)
+	$(CXX) $(CPPFLAGS) -o tests main.cpp $(OBJS) $(UPPEROBJS)
+
+.cpp.o:
+	$(CXX) $(CPPFLAGS) -c $< -o $@

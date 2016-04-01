@@ -138,10 +138,6 @@ namespace ydd
 	    msyslog(LOG_ERR, "Got an std::exception while parsing "
 		    "an HTTP response: %s", e.what());
 	}
-	catch(...)
-	{
-	    msyslog(LOG_ERR, "Got an exception while parsing an HTTP response");
-	}
 	state_ = ok;
     }
 

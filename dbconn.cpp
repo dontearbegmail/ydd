@@ -9,30 +9,75 @@
 
 namespace ydd
 {
-    DbConn::DbConn()
+    DbConn::DbConn() : 
+	currentUserId_(0)
     {
-	/* Any exception should be catched at app-global level  */
-	driver_ = sql::mysql::get_mysql_driver_instance();
-	connection_.reset(driver_->connect(YddConf::DbString, YddConf::DbUser, 
-		YddConf::DbPassword));
+	try
+	{
+	    /* Any exception should be catched at app-global level  */
+	    driver_ = sql::mysql::get_mysql_driver_instance();
+	    connection_.reset(driver_->connect(YddConf::DbString, YddConf::DbUser, 
+			YddConf::DbPassword));
+	}
+	catch(sql::SQLException &e)
+	{
+	    msyslog(LOG_ERR, "Got sql::SQLException: %s", e.what());
+	    throw(e);
+	}
     }
 
     void DbConn::checkConnection()
     {
-	/* Any exception should be catched at app-global level */
-	int reconnAttempts = 0;
-	bool ok = connection_->isValid();
-	while(!ok && (reconnAttempts <= YddConf::DbMaxReconnectionAttempts))
+	try 
 	{
-	    msyslog(LOG_WARNING, "Reconnection attempt #%d of %d", reconnAttempts, 
-		    YddConf::DbMaxReconnectionAttempts);
-	    reconnAttempts++;
-	    ok = connection_->reconnect();
+	    /* Any exception should be catched at app-global level */
+	    int reconnAttempts = 0;
+	    bool ok = connection_->isValid();
+	    while(!ok && (reconnAttempts <= YddConf::DbMaxReconnectionAttempts))
+	    {
+		msyslog(LOG_WARNING, "Reconnection attempt #%d of %d", reconnAttempts, 
+			YddConf::DbMaxReconnectionAttempts);
+		reconnAttempts++;
+		ok = connection_->reconnect();
+	    }
+	    if(!ok)
+	    {
+		msyslog(LOG_ERR, "Maximun reconnection attempts reached with no success");
+		throw("Max DB reconnection attempts reached");
+	    }
 	}
-	if(!ok)
+	catch(sql::SQLException &e)
 	{
-	    msyslog(LOG_ERROR, "Maximun reconnection attempts reached with no success");
-	    throw("Max DB reconnection attempts reached");
+	    msyslog(LOG_ERR, "Got sql::SQLException: %s", e.what());
+	    throw(e);
 	}
+    }
+
+    void DbConn::switchUser(YdTask::UserIdType userId)
+    {
+	if(userId == currentUserId_)
+	    return;
+	currentUserId_ = userId;
+	currentSchema_ = YddConf::DbPrefix;
+	currentSchema_.append(std::to_string(currentUserId_));
+	try
+	{
+	    connection_->setSchema(currentSchema_);
+	}
+	catch(sql::SQLException &e)
+	{
+	    msyslog(LOG_ERR, "Got sql::SQLException: %s", e.what());
+	    throw(e);
+	}
+    }
+
+    YdTask::UserIdType DbConn::getCurrentUserId() const
+    {
+	return currentUserId_;
+    }
+
+    std::string& DbConn::getCurrentSchema() 
+    {
+	return currentSchema_;
     }
 }
