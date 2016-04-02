@@ -25,10 +25,10 @@ namespace ydd
     {
     }
 
-    void YdRequest::run()
+    void YdRequest::doInit()
     {
-	generateRequest();
 	state_ = initError;
+	generateRequest();
 	try
 	{
 	    if(ptRequest_.empty())
@@ -42,8 +42,14 @@ namespace ydd
 	    msyslog(LOG_ERR, "Got an exception while trying to generate a JSON request: %s", e.what());
 	    return;
 	}
-	state_ = running;
-	ydClient_.run();
+	state_ = initOk;
+    }
+
+    void YdRequest::run()
+    {
+	doInit();
+	if(state_ == initOk)
+	    ydClient_.run();
     }
 
     void YdRequest::processResult()
@@ -152,13 +158,4 @@ namespace ydd
     {
     }
 
-    bool YdRequest::getUseSandbox() const
-    {
-	return useSandbox_;
-    }
-
-    const std::string& YdRequest::getToken()
-    {
-	return token_;
-    }
 }

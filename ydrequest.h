@@ -16,6 +16,7 @@ namespace ydd
 	    {
 		init,
 		initError,
+		initOk,
 		running,
 		runError,
 		responseEmptyError,
@@ -47,8 +48,6 @@ namespace ydd
 
 	    const std::string& get();
 	    const std::string& getJsonResponse();
-	    bool getUseSandbox() const;
-	    const std::string& getToken();
 	    State getState();
 	    const YdError& getYdError();
 	    void getYdErrorString(std::string& errStr);
@@ -69,6 +68,7 @@ namespace ydd
 	    void runYdProcessCallback();
 
 	    virtual void generateRequest();
+	    void doInit();
 
 	    void fetchError();
 	    template<typename T>
