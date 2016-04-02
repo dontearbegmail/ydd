@@ -4,7 +4,7 @@ SRCS = ydremote.cpp ydclient.cpp ydrequest.cpp ydrgetversion.cpp ydrcreatewsrepo
 OBJS = $(SRCS:.cpp=.o)
 
 TESTSCPPFLAGS = $(CPPFLAGS) -lboost_unit_test_framework
-TESTS = tests/DbConn_test.cpp
+TESTS = $(wildcard tests/*.cpp)
 TESTSOBJS = $(TESTS:.cpp=.o)
 
 all: ydd tests
@@ -29,6 +29,6 @@ tests/%.o : tests/%.cpp
 	$(CXX) $(TESTSCPPFLAGS) -c -o $@ $<
 
 tests: $(TESTSOBJS)
-	$(CXX) $(TESTSCPPFLAGS) -o tests/tests tests/main.cpp $(OBJS) $(TESTSOBJS);
+	$(CXX) $(TESTSCPPFLAGS) -o tests/tests $(OBJS) $(TESTSOBJS);
 	tests/tests
 

@@ -35,6 +35,7 @@ namespace ydd
 	    std::string jsonResponse_;
 	    State state_;
 
+	    void generateHttpRequest();
 	    bool isShortRead(const boost::system::error_code& error);
 	    bool flushHttpHeader(std::istream& istr);
 	    bool checkHttpVersionStatus(std::istream& istr);

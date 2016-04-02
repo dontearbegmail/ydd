@@ -108,7 +108,7 @@ namespace ydd
 	}
     }
 
-    string& YdRequest::get()
+    const string& YdRequest::get()
     {
 	return request_;
     }
@@ -118,7 +118,7 @@ namespace ydd
 	return ydClient_.getJsonResponse();
     }
 
-    YdRequest::State YdRequest::getState()
+    YdRequest::State YdRequest::getState() 
     {
 	return state_;
     }
@@ -148,4 +148,17 @@ namespace ydd
 	}
     }
 
+    void YdRequest::generateRequest()
+    {
+    }
+
+    bool YdRequest::getUseSandbox() const
+    {
+	return useSandbox_;
+    }
+
+    const std::string& YdRequest::getToken()
+    {
+	return token_;
+    }
 }

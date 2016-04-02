@@ -18,13 +18,17 @@ namespace ydd
     {
     }
 
-    void YdClient::run()
+    void YdClient::generateHttpRequest()
     {
 	httpRequest_ += httpRequestHeader_;
 	httpRequest_ += to_string(request_.get().length()) + "\r\n";
 	httpRequest_ += "Connection: close\r\n\r\n";
 	httpRequest_ += request_.get() + "\r\n";
+    }
 
+    void YdClient::run()
+    {
+	generateHttpRequest();
 	async_connect(
 		socket_.lowest_layer(), 
 		hostIt_, 

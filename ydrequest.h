@@ -44,12 +44,14 @@ namespace ydd
 	    virtual ~YdRequest();
 	    virtual void run();
 	    virtual void processResult();
+
+	    const std::string& get();
+	    const std::string& getJsonResponse();
+	    bool getUseSandbox() const;
+	    const std::string& getToken();
 	    State getState();
 	    const YdError& getYdError();
 	    void getYdErrorString(std::string& errStr);
-
-	    std::string& get();
-	    const std::string& getJsonResponse();
 	protected:
 	    std::string& token_;
 	    boost::asio::io_service& ios_;
@@ -66,7 +68,7 @@ namespace ydd
 	    YdProcess::Callback ydProcessCallback_;
 	    void runYdProcessCallback();
 
-	    virtual void generateRequest() = 0;
+	    virtual void generateRequest();
 
 	    void fetchError();
 	    template<typename T>
