@@ -4,7 +4,7 @@
 #include <mysql++/mysql++.h>
 #include <string>
 
-/* Any database exception must drop down the app */
+/* Any database exception must thrown down the app top level */
 
 namespace ydd
 {
@@ -17,6 +17,7 @@ namespace ydd
 	    DbConn();
 	    void switchUserDb(UserIdType userId);
 	    void check();
+	    mysqlpp::Connection& get();
 
 	protected:
 	    mysqlpp::Connection connection_;

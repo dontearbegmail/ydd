@@ -6,6 +6,7 @@
 #include "dbconn.h"
 
 #include "ydrgetversion.h"
+#include "ydtask.h"
 
 #include <mysql++/mysql++.h>
 
@@ -23,7 +24,9 @@ int main()
     // what is 'reactor pattern?
     try
     {
-	//DbConn dbc;
+	DbConn dbc;
+	YdTask ydt(dbc, 173025, 1);
+	ydt.log(YdTask::info, "Test");
 	boost::asio::io_service io_service;
 	//DeleteOldReports dro(token, io_service);
 	//io_service.post(boost::bind(&DeleteOldReports::run, &dro));

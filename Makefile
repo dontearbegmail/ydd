@@ -1,6 +1,6 @@
 .PHONY: all clean tests cdbo ct
-CPPFLAGS = -g -Wall -std=c++11 -D_GNU_SOURCE -lboost_system -lssl -lcrypto -lpthread -lmysqlpp -I/usr/include/mysql/
-SRCS = ydremote.cpp ydclient.cpp ydrequest.cpp ydrgetversion.cpp ydrcreatewsreport.cpp ydrgetwsreportlist.cpp ydrdeletewsreport.cpp deleteoldreports.cpp ydprocess.cpp ydprocesslog.cpp yddconf.cpp dbconn.cpp
+CPPFLAGS = -g -Wall -std=c++11 -D_GNU_SOURCE -lboost_system -lssl -lcrypto -lpthread -lmysqlpp -lmysqlclient -I/usr/include/mysql/
+SRCS = ydremote.cpp ydclient.cpp ydrequest.cpp ydrgetversion.cpp ydrcreatewsreport.cpp ydrgetwsreportlist.cpp ydrdeletewsreport.cpp deleteoldreports.cpp ydprocess.cpp yddconf.cpp dbconn.cpp ydtask.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 TESTSCPPFLAGS = $(CPPFLAGS) -lboost_unit_test_framework

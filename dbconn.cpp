@@ -63,8 +63,15 @@ namespace ydd
 	}
 	if(!ok)
 	{
-	    msyslog(LOG_ERROR, "Max reconnection attempts reached with no success");
+	    msyslog(LOG_ERR, "Max reconnection attempts reached with no success");
 	    throw(new mysqlpp::ConnectionFailed(connection_.error()));
 	}
     }
+
+    mysqlpp::Connection& DbConn::get()
+    {
+	check();
+	return connection_;
+    }
+
 }
