@@ -1,83 +1,70 @@
 #include "dbconn.h"
 #include "general.h"
 #include "yddconf.h"
-#include <mysql_error.h>
-#include <cppconn/driver.h>
-#include <cppconn/exception.h>
-#include <cppconn/resultset.h>
-#include <cppconn/statement.h>
+
+#define USER_ID_TYPE_PRINTF_FORMAT "%lu"
 
 namespace ydd
 {
-    DbConn::DbConn() : 
+    DbConn::DbConn() :
+	connection_(true),
 	currentUserId_(0)
     {
 	try
 	{
-	    /* Any exception should be catched at app-global level  */
-	    driver_ = sql::mysql::get_mysql_driver_instance();
-	    connection_.reset(driver_->connect(YddConf::DbString, YddConf::DbUser, 
-			YddConf::DbPassword));
+	    connection_.connect(NULL, YddConf::DbString.c_str(), YddConf::DbUser.c_str(), 
+		YddConf::DbPassword.c_str());
+	    connection_.set_option(new mysqlpp::ReconnectOption(false));
 	}
-	catch(sql::SQLException &e)
+	catch(const mysqlpp::Exception& ex)
 	{
-	    msyslog(LOG_ERR, "Got sql::SQLException: %s", e.what());
-	    throw(e);
+	    msyslog(LOG_ERR, "MySQL connection failed: %s", ex.what());
+	    throw(ex);
 	}
     }
 
-    void DbConn::checkConnection()
+    void DbConn::switchUserDb(UserIdType userId)
     {
-	try 
-	{
-	    /* Any exception should be catched at app-global level */
-	    int reconnAttempts = 0;
-	    bool ok = connection_->isValid();
-	    while(!ok && (reconnAttempts <= YddConf::DbMaxReconnectionAttempts))
-	    {
-		msyslog(LOG_WARNING, "Reconnection attempt #%d of %d", reconnAttempts, 
-			YddConf::DbMaxReconnectionAttempts);
-		reconnAttempts++;
-		ok = connection_->reconnect();
-	    }
-	    if(!ok)
-	    {
-		msyslog(LOG_ERR, "Maximun reconnection attempts reached with no success");
-		throw("Max DB reconnection attempts reached");
-	    }
-	}
-	catch(sql::SQLException &e)
-	{
-	    msyslog(LOG_ERR, "Got sql::SQLException: %s", e.what());
-	    throw(e);
-	}
-    }
-
-    void DbConn::switchUser(YdTask::UserIdType userId)
-    {
+	using namespace std;
 	if(userId == currentUserId_)
 	    return;
-	currentUserId_ = userId;
-	currentSchema_ = YddConf::DbPrefix;
-	currentSchema_.append(std::to_string(currentUserId_));
+	string newDb = YddConf::DbPrefix;
+	newDb.append(to_string(userId));
 	try
 	{
-	    connection_->setSchema(currentSchema_);
+	    connection_.select_db(newDb);
 	}
-	catch(sql::SQLException &e)
+	catch(const mysqlpp::Exception& e)
 	{
-	    msyslog(LOG_ERR, "Got sql::SQLException: %s", e.what());
+	    msyslog(LOG_ERR, "Got exception while trying to switch user db to "
+		    USER_ID_TYPE_PRINTF_FORMAT": %s", userId, e.what());
 	    throw(e);
 	}
+	currentUserId_ = userId;
+	currentDb_ = newDb;
     }
 
-    YdTask::UserIdType DbConn::getCurrentUserId() const
+    void DbConn::check()
     {
-	return currentUserId_;
-    }
-
-    std::string& DbConn::getCurrentSchema() 
-    {
-	return currentSchema_;
+	mysqlpp::NoExceptions ne(connection_);
+	int reconnAttempts = 0;
+	bool ok = connection_.ping();
+	if(!ok)
+	    msyslog(LOG_WARNING, "Database connection lost, will try to reconnect");
+	while(!ok && (reconnAttempts < YddConf::DbMaxReconnectionAttempts))
+	{
+	    msyslog(LOG_WARNING, "Reconnection attempt #%d of %d", reconnAttempts, 
+		    YddConf::DbMaxReconnectionAttempts);
+	    reconnAttempts++;
+	    connection_.connect(currentDb_.empty() ? NULL : currentDb_.c_str(),
+		    YddConf::DbString.c_str(), YddConf::DbUser.c_str(), 
+		    YddConf::DbPassword.c_str());
+	    ok = connection_.ping();
+	}
+	if(!ok)
+	{
+	    msyslog(LOG_ERROR, "Max reconnection attempts reached with no success");
+	    throw(new mysqlpp::ConnectionFailed(connection_.error()));
+	}
     }
 }

@@ -2,26 +2,57 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_CASE(construct_DbConn)
+using namespace ydd;
+
+class TestDbConn : public DbConn
 {
-    ydd::DbConn dbconn;
-    BOOST_REQUIRE(dbconn.getCurrentUserId() == 0);
-    BOOST_REQUIRE(dbconn.getCurrentSchema().empty());
+    public:
+	TestDbConn()
+	{
+	}
+
+	void test_switchUserDb_nonExistingUserId()
+	{
+	    BOOST_REQUIRE_THROW(switchUserDb(std::numeric_limits<UserIdType>::max()), mysqlpp::Exception);
+	    BOOST_REQUIRE_EQUAL(currentUserId_, 0);
+	    BOOST_REQUIRE_EQUAL(currentDb_, "");
+	}
+	
+	void test_switchUserDb_existingUserId()
+	{
+	    BOOST_REQUIRE_NO_THROW(switchUserDb(173025));
+	    BOOST_REQUIRE_EQUAL(currentUserId_, 173025);
+	    BOOST_REQUIRE_EQUAL(currentDb_, "ydd_173025");
+	}
+
+	void test_switchUserDb_sameUserId()
+	{
+	    BOOST_REQUIRE_NO_THROW(switchUserDb(173025));
+	    BOOST_REQUIRE_EQUAL(currentUserId_, 173025);
+	    BOOST_REQUIRE_EQUAL(currentDb_, "ydd_173025");
+
+	    BOOST_REQUIRE_NO_THROW(switchUserDb(173025));
+	    BOOST_REQUIRE_EQUAL(currentUserId_, 173025);
+	    BOOST_REQUIRE_EQUAL(currentDb_, "ydd_173025");
+	}
+};
+
+struct FxDbConn
+{
+    FxDbConn() :
+	dbc()
+    {
+    }
+
+    TestDbConn dbc;
+};
+
+BOOST_FIXTURE_TEST_CASE(switchUserDb_nonExistingUserId, FxDbConn)
+{
+    dbc.test_switchUserDb_nonExistingUserId();
 }
 
-BOOST_AUTO_TEST_CASE(switchUser)
+BOOST_FIXTURE_TEST_CASE(switchUserDb_existingUserId, FxDbConn)
 {
-    ydd::DbConn dbconn;
-    BOOST_REQUIRE_THROW(dbconn.switchUser(110), sql::SQLException);
-    BOOST_REQUIRE(dbconn.getCurrentUserId() == 110);
-    BOOST_REQUIRE(dbconn.getCurrentSchema() == "ydd_110");
-
-    BOOST_REQUIRE_NO_THROW(dbconn.switchUser(110));
-    BOOST_REQUIRE(dbconn.getCurrentUserId() == 110);
-    BOOST_REQUIRE(dbconn.getCurrentSchema() == "ydd_110");
-
-    BOOST_WARN_THROW(dbconn.switchUser(173025), sql::SQLException);
-    BOOST_REQUIRE(dbconn.getCurrentUserId() == 173025);
-    BOOST_REQUIRE(dbconn.getCurrentSchema() == "ydd_173025");
-
+    dbc.test_switchUserDb_existingUserId();
 }

@@ -4,7 +4,6 @@
 #include "ydtask.h"
 #include <string>
 #include <boost/asio.hpp>
-#include "dbconn.h"
 
 namespace ydd
 {

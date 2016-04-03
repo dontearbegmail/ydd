@@ -28,9 +28,38 @@ class TestYdRequest : public YdRequest
 	ptRequest_.put("method", "MyMethod");
 	doInit();
 	BOOST_REQUIRE_EQUAL(state_, initOk);
+	BOOST_REQUIRE_EQUAL(request_, "{\"method\":\"MyMethod\"}\n");
     }
 
-    void test_constructor(std::string& token, boost::asio::io_service& ios, bool useSandbox, 
+    void testInit_ptRequestWithQuotes()
+    {
+	BOOST_REQUIRE_EQUAL(state_, init);
+	ptRequest_.put("data", "\"гипсокартон монтаж\"");
+	doInit();
+	BOOST_REQUIRE_EQUAL(state_, initOk);
+	BOOST_REQUIRE_EQUAL(request_, "{\"data\":\"\\\"гипсокартон монтаж\\\"\"}\n");
+    }
+
+    void testInit_ptRequestWithOneQuote()
+    {
+	// !{]!@#$%^&*()_-=±~/?<>,.;
+	BOOST_REQUIRE_EQUAL(state_, init);
+	ptRequest_.put("data", "\"настоящий запрос");
+	doInit();
+	BOOST_REQUIRE_EQUAL(state_, initOk);
+	BOOST_REQUIRE_EQUAL(request_, "{\"data\":\"\\\"настоящий запрос\"}\n");
+    }
+
+    void testInit_ptRequestWithSpecialChars()
+    {
+	BOOST_REQUIRE_EQUAL(state_, init);
+	ptRequest_.put("data", "!{]}]@#$%^&*()_/-=±~?\\<>,.;");
+	doInit();
+	BOOST_REQUIRE_EQUAL(state_, initOk);
+	BOOST_REQUIRE_EQUAL(request_, "{\"data\":\"!{]}]@#$%^&*()_\\/-=±~?\\\\<>,.;\"}\n");
+    }
+
+    void testConstructor(std::string& token, boost::asio::io_service& ios, bool useSandbox, 
 	    YdProcess::Callback callback)
     {
 	BOOST_REQUIRE_EQUAL(token_, token);
@@ -66,7 +95,7 @@ struct FxYdRequest
 
 BOOST_FIXTURE_TEST_CASE(constructor, FxYdRequest)
 {
-    tydr.test_constructor(token, ios, useSandbox, NULL);
+    tydr.testConstructor(token, ios, useSandbox, NULL);
 }
 
 BOOST_FIXTURE_TEST_CASE(getYdErrorString, FxYdRequest)
@@ -93,4 +122,24 @@ BOOST_FIXTURE_TEST_CASE(getYdErrorString, FxYdRequest)
 BOOST_FIXTURE_TEST_CASE(init_emptyPtRequest, FxYdRequest)
 {
     tydr.testInit_emptyPtRequest();
+}
+
+BOOST_FIXTURE_TEST_CASE(init_ptRequest1, FxYdRequest)
+{
+    tydr.testInit_ptRequest1();
+}
+
+BOOST_FIXTURE_TEST_CASE(init_ptRequestWithQuotes, FxYdRequest)
+{
+    tydr.testInit_ptRequestWithQuotes();
+}
+
+BOOST_FIXTURE_TEST_CASE(init_ptRequestWithSpecialChars, FxYdRequest)
+{
+    tydr.testInit_ptRequestWithSpecialChars();
+}
+
+BOOST_FIXTURE_TEST_CASE(init_ptRequestWithOneQuote, FxYdRequest)
+{
+    tydr.testInit_ptRequestWithOneQuote();
 }

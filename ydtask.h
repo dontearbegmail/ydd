@@ -6,8 +6,6 @@ namespace ydd
     class YdTask
     {
 	public:
-	    typedef unsigned long UserIdType;
-	    typedef unsigned long TaskIdType;
     };
 }
 

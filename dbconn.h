@@ -1,33 +1,27 @@
 #ifndef DBCONN_H
 #define DBCONN_H
 
-#include <mysql_driver.h>
-#include <mysql_connection.h>
-#include <memory>
+#include <mysql++/mysql++.h>
 #include <string>
-#include "ydtask.h"
+
+/* Any database exception must drop down the app */
 
 namespace ydd
 {
     class DbConn
     {
 	public:
-	    typedef std::shared_ptr<sql::Connection> PConnection;
+	    typedef unsigned long UserIdType;
+	    typedef unsigned long TaskIdType;
 
 	    DbConn();
-	    void switchUser(YdTask::UserIdType userId);
+	    void switchUserDb(UserIdType userId);
+	    void check();
 
-	    YdTask::UserIdType getCurrentUserId() const;
-	    std::string& getCurrentSchema();
-	private:
-	    sql::mysql::MySQL_Driver* driver_;
-	    PConnection connection_;
-
-	    /* this is not mysql user, but our system's user */
-	    YdTask::UserIdType currentUserId_;
-	    std::string currentSchema_;
-
-	    void checkConnection();
+	protected:
+	    mysqlpp::Connection connection_;
+	    UserIdType currentUserId_;
+	    std::string currentDb_;
     };
 }
 
