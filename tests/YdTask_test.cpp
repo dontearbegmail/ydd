@@ -15,7 +15,7 @@ class TestYdTask : public YdTask
 	void test_logQuery_simple(mysqlpp::Query query)
 	{
 	    std::string q;
-	    logQuery(query, info, "Simple message", &q);
+	    logQuery(query, info, "Simple message", NULL, &q);
 	    BOOST_REQUIRE_EQUAL(query.str(), 
 		    "CALL sp_add_log_record(1, 0, 'Simple message', NULL, @ret);"
 		    "SELECT @ret;");
@@ -24,7 +24,7 @@ class TestYdTask : public YdTask
 	void test_logQuery_oneDoubleQuote(mysqlpp::Query query)
 	{
 	    std::string q;
-	    logQuery(query, info, "One double \" quote", &q);
+	    logQuery(query, info, "One double \" quote", NULL, &q);
 	    BOOST_REQUIRE_EQUAL(query.str(), 
 		    "CALL sp_add_log_record(1, 0, 'One double \\\" quote', NULL, @ret);"
 		    "SELECT @ret;");
@@ -33,7 +33,7 @@ class TestYdTask : public YdTask
 	void test_logQuery_oneSingleQuote(mysqlpp::Query query)
 	{
 	    std::string q;
-	    logQuery(query, info, "One ' single quote", &q);
+	    logQuery(query, info, "One ' single quote", NULL, &q);
 	    BOOST_REQUIRE_EQUAL(query.str(), 
 		    "CALL sp_add_log_record(1, 0, 'One \\\' single quote', NULL, @ret);"
 		    "SELECT @ret;");
@@ -42,7 +42,7 @@ class TestYdTask : public YdTask
 	void test_logQuery_combinedQuotes1(mysqlpp::Query query)
 	{
 	    std::string q;
-	    logQuery(query, info, "'Comb'ined \"quotes\" 1", &q);
+	    logQuery(query, info, "'Comb'ined \"quotes\" 1", NULL, &q);
 	    BOOST_REQUIRE_EQUAL(query.str(), 
 		    "CALL sp_add_log_record(1, 0, '\\\'Comb\\\'ined \\\"quotes\\\" 1', NULL, @ret);"
 		    "SELECT @ret;");
@@ -51,7 +51,7 @@ class TestYdTask : public YdTask
 	void test_logQuery_combinedQuotes2(mysqlpp::Query query)
 	{
 	    std::string q;
-	    logQuery(query, info, "\"Combined\" 'quotes 2\"", &q);
+	    logQuery(query, info, "\"Combined\" 'quotes 2\"", NULL, &q);
 	    BOOST_REQUIRE_EQUAL(query.str(), 
 		    "CALL sp_add_log_record(1, 0, '\\\"Combined\\\" \\\'quotes 2\\\"', NULL, @ret);"
 		    "SELECT @ret;");
@@ -60,7 +60,7 @@ class TestYdTask : public YdTask
 	void test_logQuery_sqlInjection1(mysqlpp::Query query)
 	{
 	    std::string q;
-	    logQuery(query, info, "select * from tasks_phrases", &q);
+	    logQuery(query, info, "select * from tasks_phrases", NULL, &q);
 	    BOOST_REQUIRE_EQUAL(query.str(), 
 		    "CALL sp_add_log_record(1, 0, 'select * from tasks_phrases', NULL, @ret);"
 		    "SELECT @ret;");
@@ -69,7 +69,7 @@ class TestYdTask : public YdTask
 	void test_logQuery_sqlInjection2(mysqlpp::Query query)
 	{
 	    std::string q;
-	    logQuery(query, info, "select * from `tasks_phrases where `id` = 0", &q);
+	    logQuery(query, info, "select * from `tasks_phrases where `id` = 0", NULL, &q);
 	    BOOST_REQUIRE_EQUAL(query.str(), 
 		    "CALL sp_add_log_record(1, 0, 'select * from `tasks_phrases where `id` = 0', NULL, @ret);"
 		    "SELECT @ret;");
@@ -78,7 +78,7 @@ class TestYdTask : public YdTask
 	void test_logQuery_specialchars(mysqlpp::Query query)
 	{
 	    std::string q;
-	    logQuery(query, info, "±§!@#$%^&*()_+№;:`{?-+=/][}{<>~`", &q);
+	    logQuery(query, info, "±§!@#$%^&*()_+№;:`{?-+=/][}{<>~`", NULL, &q);
 	    BOOST_REQUIRE_EQUAL(query.str(), 
 		    "CALL sp_add_log_record(1, 0, '±§!@#$%^&*()_+№;:`{?-+=/][}{<>~`', NULL, @ret);"
 		    "SELECT @ret;");
@@ -102,7 +102,8 @@ class TestYdTask : public YdTask
 	void test_logQuery_XSS1(mysqlpp::Query query)
 	{
 	    std::string q;
-	    logQuery(query, info, "<script type=\"text/javascript\">alert('XSS');</script>", &q);
+	    logQuery(query, info, "<script type=\"text/javascript\">alert('XSS');</script>", 
+		    NULL, &q);
 	    BOOST_REQUIRE_EQUAL(query.str(), 
 		    "CALL sp_add_log_record(1, 0, "
 		    "'<script type=\\\"text/javascript\\\">alert(\\\'XSS\\\');</script>', NULL, @ret);"

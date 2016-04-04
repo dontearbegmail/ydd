@@ -12,26 +12,36 @@ namespace ydd
 
     /* Doest not reset query! */
     void YdTask::logQuery(mysqlpp::Query& query, LogLevel level, const char* message, 
-	    std::string* os)
+	    std::string* html, std::string* os)
     {
-	/* set @p = 0;
-	 * call sp_add_log_record(taskid, level, "test", html_to_log, @p);
-	 * select @p */
+	/* call sp_add_log_record(taskid, level, "test", html_to_log, @ret);
+	 * select @ret */
 	query <<  
 	    "CALL sp_add_log_record(" <<
 	    taskId_ << ", " <<
 	    level << ", " <<
-	    mysqlpp::quote << message << ", " <<
-	    "NULL, @ret);" <<
-	    "SELECT @ret;";
+	    mysqlpp::quote << message << ", ";
+	bool nullHtml = true;
+	if(html != NULL)
+	{
+	    if(!(*html).empty()) 
+	    {
+		nullHtml = false;
+		query << mysqlpp::quote << *html;
+	    }
+	}
+	if(nullHtml)
+	{
+	    query << "NULL";
+	}
+	query << ", @ret);SELECT @ret;";
 	if(os != NULL)
 	{
 	    *os = query.str();
 	}
     }
 
-
-    void YdTask::log(LogLevel level, const char* message)
+    void YdTask::log(LogLevel level, const char* message, std::string* html)
     {
 	using namespace mysqlpp;
 	Connection& con = dbc_.get();
@@ -39,7 +49,7 @@ namespace ydd
 	{
 	    dbc_.switchUserDb(userId_);
 	    Query query = con.query();
-	    logQuery(query, level, message);
+	    logQuery(query, level, message, html);
 	    StoreQueryResult res = query.store();
 	    while(query.more_results())
 		res = query.store_next();

@@ -24,7 +24,8 @@ int main()
     {
 	DbConn dbc;
 	YdTask ydt(dbc, 173025, 1);
-	ydt.log(YdTask::info, "m'\"test");
+	std::string html = "POST /v4/json/ HTTP/1.1\r\nHost:api-sandbox.direct.yandex.ru\r\n";
+	ydt.log(YdTask::info, "m'\"test", &html);
 
 	boost::asio::io_service io_service;
 	//DeleteOldReports dro(token, io_service);
