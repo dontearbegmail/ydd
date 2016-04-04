@@ -1,14 +1,12 @@
 #include "general.h"
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include "deleteoldreports.h"
-#include "yddconf.h"
 #include "dbconn.h"
 
+#include "deleteoldreports.h"
 #include "ydrgetversion.h"
 #include "ydtask.h"
 
-#include <mysql++/mysql++.h>
 
 void timerHandler(const boost::system::error_code& /*e*/)
 {
@@ -26,7 +24,8 @@ int main()
     {
 	DbConn dbc;
 	YdTask ydt(dbc, 173025, 1);
-	ydt.log(YdTask::info, "Test");
+	ydt.log(YdTask::info, "m'\"test");
+
 	boost::asio::io_service io_service;
 	//DeleteOldReports dro(token, io_service);
 	//io_service.post(boost::bind(&DeleteOldReports::run, &dro));
@@ -35,10 +34,15 @@ int main()
 	//io_service.run();
 	std::cout << r.getJsonResponse() << std::endl;
     }
-    catch (std::exception& e)
+    catch (const mysqlpp::ConnectionFailed& err) {
+	cerr << "Failed to connect to database server: " <<
+	    err.what() << endl;
+	return 1;
+    }
+catch (std::exception& e)
     {
 	std::cout << "Exception: " << e.what() << endl;
     }
-
+    
     return 0;
 }

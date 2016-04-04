@@ -1,6 +1,5 @@
 #include "ydtask.h"
 #include "general.h"
-#include "logresult.h"
 
 namespace ydd
 {
@@ -18,19 +17,19 @@ namespace ydd
 	/* set @p = 0;
 	 * call sp_add_log_record(taskid, level, "test", html_to_log, @p);
 	 * select @p */
-	query << "SET @p = 0;" << 
-	    "CALL sp_add_log_record(%0, %1, %2q, NULL, @p);" << 
-	    "SELECT @p;";
-	query.parse();
-	std::string s = query.str((mysqlpp::sql_int_unsigned) taskId_,
-		(mysqlpp::sql_tinyint_unsigned) level,
-		(mysqlpp::sql_varchar) message);
-	/* All this slow shit is needed for unit tests */
-	query.reset();
-	query << s;
+	query <<  
+	    "CALL sp_add_log_record(" <<
+	    taskId_ << ", " <<
+	    level << ", " <<
+	    mysqlpp::quote << message << ", " <<
+	    "NULL, @ret);" <<
+	    "SELECT @ret;";
 	if(os != NULL)
-	    *os = s;
+	{
+	    *os = query.str();
+	}
     }
+
 
     void YdTask::log(LogLevel level, const char* message)
     {
@@ -38,24 +37,37 @@ namespace ydd
 	Connection& con = dbc_.get();
 	try
 	{
+	    dbc_.switchUserDb(userId_);
 	    Query query = con.query();
 	    logQuery(query, level, message);
-	    std::vector<LogResult> res;
-	    query.storein(res);
+	    StoreQueryResult res = query.store();
+	    while(query.more_results())
+		res = query.store_next();
+
 	    bool fail = false;
-	    if(res.size() == 0)
+	    if(res.num_rows() == 0 || res.num_fields() == 0)
 	    {
 		msyslog(LOG_ERR, "Didn't get return value for sp_add_log_record.");
 		fail = true;
 	    }
 	    else
 	    {
-		int result = res[0].result;
-		if(result != 1)
+		std::string fn = res.field_name(0);
+		if(res.field_name(0) != "@ret")
 		{
-		    msyslog(LOG_ERR, "sp_add_log_record should have returned 1, "
-			    "but it returned %d", result);
+		    msyslog(LOG_ERR, "The value returned by sp_add_log_record should be "
+			    "selected in @ret, but it's not present in the MySQL result");
 		    fail = true;
+		}
+		else 
+		{
+		    int result = res[0][0];
+		    if(result != 1)
+		    {
+			msyslog(LOG_ERR, "sp_add_log_record should have returned 1, "
+				"but it returned %d", result);
+			fail = true;
+		    }
 		}
 	    }
 	    if(fail)

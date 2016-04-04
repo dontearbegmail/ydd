@@ -12,9 +12,11 @@ namespace ydd
     {
 	try
 	{
+	    connection_.set_option(new mysqlpp::ReconnectOption(false));
+	    connection_.set_option(new mysqlpp::MultiStatementsOption(true));
+	    connection_.set_option(new mysqlpp::MultiResultsOption(true));
 	    connection_.connect(NULL, YddConf::DbString.c_str(), YddConf::DbUser.c_str(), 
 		YddConf::DbPassword.c_str());
-	    connection_.set_option(new mysqlpp::ReconnectOption(false));
 	}
 	catch(const mysqlpp::Exception& ex)
 	{
