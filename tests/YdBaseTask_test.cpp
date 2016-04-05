@@ -10,6 +10,27 @@ class TestYdBaseTask : public YdBaseTask
 	TestYdBaseTask(DbConn& dbc, DbConn::UserIdType userId, DbConn::TaskIdType taskId) : 
 	    YdBaseTask(dbc, userId, taskId)
 	{
+	    using namespace mysqlpp;
+	    dbc_.switchUserDb(userId_);
+	    Query query = dbc_.get().query();
+	    query << "DROP PROCEDURE IF EXISTS `sp_fill_test_tasks_phrases_set`";
+	    query.execute();
+	    query << 
+		"CREATE PROCEDURE `sp_fill_test_tasks_phrases_set`"
+		    "(IN `p_first` INT UNSIGNED, IN `p_last` INT UNSIGNED, "
+		    " IN `p_finished` BOOLEAN, IN `p_taskid` INT UNSIGNED) "
+		"BEGIN\r\n"
+		"\tDECLARE i INT;\r\n"
+		"\tDECLARE phr VARCHAR(32);\r\n"
+		"\tSET i = p_first;\r\n"
+		"\tWHILE i <= p_last DO\r\n"
+		"\t\tSET phr = CONCAT('phrase', i);\r\n"
+		"\t\tINSERT INTO tasks_phrases(`taskid`, `phrase`, `finished`) \r\n"
+		"\t\t\tVALUES (p_taskid, phr, p_finished);\r\n"
+		"\t\tSET i = i + 1;\r\n"
+		"\tEND WHILE;\r\n"
+		"END";
+	    query.execute();
 	}
 
 	virtual ~TestYdBaseTask()
@@ -118,6 +139,13 @@ class TestYdBaseTask : public YdBaseTask
 	{
 	    BOOST_REQUIRE_NO_THROW(log(info, "<script type=\"text/javascript\">alert('XSS');</script>"));
 	}
+
+	/*
+	DELETE FROM `phrases_keywords`;
+	ALTER TABLE `phrases_keywords` AUTO_INCREMENT = 1;
+	DELETE FROM `tasks_phrases`;
+	ALTER TABLE `tasks_phrases` AUTO_INCREMENT = 1
+	*/
 };
 
 struct FxYdBaseTask
@@ -204,5 +232,4 @@ BOOST_FIXTURE_TEST_CASE(log_XSS1, FxYdBaseTask)
 {
     tydt.test_log_XSS1(query);
 }
-
 
