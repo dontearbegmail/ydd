@@ -171,7 +171,9 @@ class TestYdBaseTask : public YdBaseTask
 	    dbc_.switchUserDb(userId_);
 	    flush_storePhrase(query);
 	    query << 
-		"CALL `sp_fill_test_tasks_phrases_set`(1, 7, 0, 1);";
+		"CALL `sp_fill_test_tasks_phrases_set`(1, 7, 0, 1);" <<
+		"CALL `sp_fill_test_tasks_phrases_set`(21, 24, 0, 2);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(71, 72, 0, 7);";
 	    query.exec();
 	    flushQuery(query);
 
@@ -193,6 +195,10 @@ class TestYdBaseTask : public YdBaseTask
 	    p7.keywords.push_back({7, "keyword7_1"});
 	    storePhrase(p7, conn);
 
+	    /* phrase has no keywords */
+	    YdPhrase p10 = {10, ""};
+	    storePhrase(p10, conn);
+
 	    std::vector<phrases_keywords> result, input;
 	    query << "SELECT `phraseid`, `keyword` FROM `phrases_keywords`;";
 	    query.storein(result);
@@ -204,15 +210,21 @@ class TestYdBaseTask : public YdBaseTask
 	    BOOST_REQUIRE(result == input);
 
 	    std::vector<YdBaseTask_test_tasks_phrases> tp_result, expected;
-	    expected.push_back({1, "phrase1"});
-	    expected.push_back({0, "phrase2"});
-	    expected.push_back({0, "phrase3"});
-	    expected.push_back({1, "phrase4"});
-	    expected.push_back({0, "phrase5"});
-	    expected.push_back({0, "phrase6"});
-	    expected.push_back({1, "phrase7"});
+	    expected.push_back({1, 1, "phrase1"});
+	    expected.push_back({1, 0, "phrase2"});
+	    expected.push_back({1, 0, "phrase3"});
+	    expected.push_back({1, 1, "phrase4"});
+	    expected.push_back({1, 0, "phrase5"});
+	    expected.push_back({1, 0, "phrase6"});
+	    expected.push_back({1, 1, "phrase7"});
+	    expected.push_back({2, 0, "phrase21"});
+	    expected.push_back({2, 0, "phrase22"});
+	    expected.push_back({2, 1, "phrase23"});
+	    expected.push_back({2, 0, "phrase24"});
+	    expected.push_back({7, 0, "phrase71"});
+	    expected.push_back({7, 0, "phrase72"});
 
-	    query << "SELECT `finished`, `phrase` FROM `tasks_phrases`;";
+	    query << "SELECT `taskid`, `finished`, `phrase` FROM `tasks_phrases`;";
 	    query.storein(tp_result);
 	    BOOST_REQUIRE(tp_result == expected);
 	}

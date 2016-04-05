@@ -126,8 +126,11 @@ namespace ydd
 	    Query query = con.query();
 	    {
 		Transaction trans(con);
-		query.insert(phrase.keywords.begin(), phrase.keywords.end());
-		query.execute();
+		if(!phrase.keywords.empty())
+		{
+		    query.insert(phrase.keywords.begin(), phrase.keywords.end());
+		    query.execute();
+		}
 		/* UPDATE `tasks_phrases` SET `finished`= 1 WHERE `id` = phrase.id */
 		query << 
 		    "UPDATE `tasks_phrases` SET `finished`= 1 WHERE `id` = " <<
