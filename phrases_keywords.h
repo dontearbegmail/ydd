@@ -8,9 +8,10 @@
 #include <mysql++/mysql++.h>
 #include <mysql++/ssqls.h>
 
-sql_create_2(phrases_keywords, 
-	2, 0,
+sql_create_3(phrases_keywords, 
+	3, 0,
 	mysqlpp::sql_int_unsigned, phraseid,
-	mysqlpp::sql_varchar, keyword)
+	mysqlpp::sql_varchar, keyword,
+	mysqlpp::sql_int_unsigned, shows)
 
 #endif /* PHRASES_KEYWORDS_H */

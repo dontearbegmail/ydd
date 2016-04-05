@@ -178,21 +178,21 @@ class TestYdBaseTask : public YdBaseTask
 	    flushQuery(query);
 
 	    YdPhrase p1 = {1, ""};
-	    p1.keywords.push_back({1, "keyword1_1"});
-	    p1.keywords.push_back({1, "keyword1_2"});
-	    p1.keywords.push_back({1, "keyword1_3"});
+	    p1.keywords.push_back({1, "keyword1_1", 11});
+	    p1.keywords.push_back({1, "keyword1_2", 12});
+	    p1.keywords.push_back({1, "keyword1_3", 13});
 	    storePhrase(p1, conn);
 
 	    YdPhrase p4 = {4, ""};
-	    p4.keywords.push_back({4, "keyword4_1"});
-	    p4.keywords.push_back({4, "keyword4_2"});
-	    p4.keywords.push_back({4, "keyword4_3"});
-	    p4.keywords.push_back({4, "keyword4_4"});
-	    p4.keywords.push_back({4, "keyword4_5"});
+	    p4.keywords.push_back({4, "keyword4_1", 41});
+	    p4.keywords.push_back({4, "keyword4_2", 42});
+	    p4.keywords.push_back({4, "keyword4_3", 43});
+	    p4.keywords.push_back({4, "keyword4_4", 44});
+	    p4.keywords.push_back({4, "keyword4_5", 45});
 	    storePhrase(p4, conn);
 
 	    YdPhrase p7 = {7, ""};
-	    p7.keywords.push_back({7, "keyword7_1"});
+	    p7.keywords.push_back({7, "keyword7_1", 71});
 	    storePhrase(p7, conn);
 
 	    /* phrase has no keywords */
@@ -200,7 +200,7 @@ class TestYdBaseTask : public YdBaseTask
 	    storePhrase(p10, conn);
 
 	    std::vector<phrases_keywords> result, input;
-	    query << "SELECT `phraseid`, `keyword` FROM `phrases_keywords`;";
+	    query << "SELECT `phraseid`, `keyword`, `shows` FROM `phrases_keywords`;";
 	    query.storein(result);
 
 	    input = p1.keywords;
