@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "sqlkeyword.h"
+#include "phrases_keywords.h"
 
 namespace ydd
 {
@@ -11,7 +11,7 @@ namespace ydd
     {
 	unsigned long id;
 	std::string value;
-	std::vector<SqlKeyword> keywords;
+	std::vector<phrases_keywords> keywords;
     };
 
     struct YdReport

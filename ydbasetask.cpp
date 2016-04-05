@@ -1,7 +1,7 @@
 #include "general.h"
 
-#define EXPAND_SQLKEYWORD_SSQLS_STATICS
-#include "sqlkeyword.h"
+#define EXPAND_PHRASES_KEYWORDS_SSQLS_STATICS
+#include "phrases_keywords.h"
 
 #include "ydbasetask.h"
 
