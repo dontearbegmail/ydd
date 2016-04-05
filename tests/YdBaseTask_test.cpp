@@ -1,6 +1,7 @@
 #include "../ydbasetask.h"
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
+#include "../general.h"
 
 using namespace ydd;
 
@@ -37,7 +38,7 @@ class TestYdBaseTask : public YdBaseTask
 	{
 	}
 
-	void test_logQuery_simple(mysqlpp::Query query)
+	void test_logQuery_simple(mysqlpp::Query& query)
 	{
 	    std::string q;
 	    logQuery(query, info, "Simple message", NULL, &q);
@@ -46,7 +47,7 @@ class TestYdBaseTask : public YdBaseTask
 		    "SELECT @ret;");
 	}
 
-	void test_logQuery_oneDoubleQuote(mysqlpp::Query query)
+	void test_logQuery_oneDoubleQuote(mysqlpp::Query& query)
 	{
 	    std::string q;
 	    logQuery(query, info, "One double \" quote", NULL, &q);
@@ -55,7 +56,7 @@ class TestYdBaseTask : public YdBaseTask
 		    "SELECT @ret;");
 	}
 
-	void test_logQuery_oneSingleQuote(mysqlpp::Query query)
+	void test_logQuery_oneSingleQuote(mysqlpp::Query& query)
 	{
 	    std::string q;
 	    logQuery(query, info, "One ' single quote", NULL, &q);
@@ -64,7 +65,7 @@ class TestYdBaseTask : public YdBaseTask
 		    "SELECT @ret;");
 	}
 
-	void test_logQuery_combinedQuotes1(mysqlpp::Query query)
+	void test_logQuery_combinedQuotes1(mysqlpp::Query& query)
 	{
 	    std::string q;
 	    logQuery(query, info, "'Comb'ined \"quotes\" 1", NULL, &q);
@@ -73,7 +74,7 @@ class TestYdBaseTask : public YdBaseTask
 		    "SELECT @ret;");
 	}
 
-	void test_logQuery_combinedQuotes2(mysqlpp::Query query)
+	void test_logQuery_combinedQuotes2(mysqlpp::Query& query)
 	{
 	    std::string q;
 	    logQuery(query, info, "\"Combined\" 'quotes 2\"", NULL, &q);
@@ -82,7 +83,7 @@ class TestYdBaseTask : public YdBaseTask
 		    "SELECT @ret;");
 	}
 
-	void test_logQuery_sqlInjection1(mysqlpp::Query query)
+	void test_logQuery_sqlInjection1(mysqlpp::Query& query)
 	{
 	    std::string q;
 	    logQuery(query, info, "select * from tasks_phrases", NULL, &q);
@@ -91,7 +92,7 @@ class TestYdBaseTask : public YdBaseTask
 		    "SELECT @ret;");
 	}
 
-	void test_logQuery_sqlInjection2(mysqlpp::Query query)
+	void test_logQuery_sqlInjection2(mysqlpp::Query& query)
 	{
 	    std::string q;
 	    logQuery(query, info, "select * from `tasks_phrases where `id` = 0", NULL, &q);
@@ -100,7 +101,7 @@ class TestYdBaseTask : public YdBaseTask
 		    "SELECT @ret;");
 	}
 
-	void test_logQuery_specialchars(mysqlpp::Query query)
+	void test_logQuery_specialchars(mysqlpp::Query& query)
 	{
 	    std::string q;
 	    logQuery(query, info, "±§!@#$%^&*()_+№;:`{?-+=/][}{<>~`", NULL, &q);
@@ -109,22 +110,22 @@ class TestYdBaseTask : public YdBaseTask
 		    "SELECT @ret;");
 	}
 
-	void test_log_sqlInjection1(mysqlpp::Query query)
+	void test_log_sqlInjection1(mysqlpp::Query& query)
 	{
 	    BOOST_REQUIRE_NO_THROW(log(info, "select * from tasks_phrases"));
 	}
 
-	void test_log_sqlInjection2(mysqlpp::Query query)
+	void test_log_sqlInjection2(mysqlpp::Query& query)
 	{
 	    BOOST_REQUIRE_NO_THROW(log(info, "select * from `tasks_phrases where `id` = 0"));
 	}
 
-	void test_log_specialchars(mysqlpp::Query query)
+	void test_log_specialchars(mysqlpp::Query& query)
 	{
 	    BOOST_REQUIRE_NO_THROW(log(info, "±§!@#$%^&*()_+№;:`{?-+=/][}{<>~`"));
 	}
 
-	void test_logQuery_XSS1(mysqlpp::Query query)
+	void test_logQuery_XSS1(mysqlpp::Query& query)
 	{
 	    std::string q;
 	    logQuery(query, info, "<script type=\"text/javascript\">alert('XSS');</script>", 
@@ -135,7 +136,7 @@ class TestYdBaseTask : public YdBaseTask
 		    "SELECT @ret;");
 	}
 
-	void test_log_XSS1(mysqlpp::Query query)
+	void test_log_XSS1(mysqlpp::Query& query)
 	{
 	    BOOST_REQUIRE_NO_THROW(log(info, "<script type=\"text/javascript\">alert('XSS');</script>"));
 	}
@@ -146,6 +147,26 @@ class TestYdBaseTask : public YdBaseTask
 	DELETE FROM `tasks_phrases`;
 	ALTER TABLE `tasks_phrases` AUTO_INCREMENT = 1
 	*/
+	void flush_storePhrase(mysqlpp::Query& query)
+	{
+	    query << 
+		"DELETE FROM `phrases_keywords`;"
+		"ALTER TABLE `phrases_keywords` AUTO_INCREMENT = 1;"
+		"DELETE FROM `tasks_phrases`;"
+		"ALTER TABLE `tasks_phrases` AUTO_INCREMENT = 1";
+	    query.exec();
+	    while(query.more_results())
+		query.store_next();
+	}
+
+	void test_storePhrase_simple(mysqlpp::Query& query)
+	{
+	    dbc_.switchUserDb(userId_);
+	    flush_storePhrase(query);
+	    query << 
+		"CALL `sp_fill_test_tasks_phrases_set`(1, 7, 0, 1);";
+	    query.exec();
+	}
 };
 
 struct FxYdBaseTask
@@ -231,5 +252,10 @@ BOOST_FIXTURE_TEST_CASE(logQuery_XSS1, FxYdBaseTask)
 BOOST_FIXTURE_TEST_CASE(log_XSS1, FxYdBaseTask)
 {
     tydt.test_log_XSS1(query);
+}
+
+BOOST_FIXTURE_TEST_CASE(storePhrase_simple, FxYdBaseTask)
+{
+    BOOST_REQUIRE_NO_THROW(tydt.test_storePhrase_simple(query));
 }
 
