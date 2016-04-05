@@ -20,20 +20,20 @@ class TestDbConn : public DbConn
 	
 	void test_switchUserDb_existingUserId()
 	{
-	    BOOST_REQUIRE_NO_THROW(switchUserDb(173025));
-	    BOOST_REQUIRE_EQUAL(currentUserId_, 173025);
-	    BOOST_REQUIRE_EQUAL(currentDb_, "ydd_173025");
+	    BOOST_REQUIRE_NO_THROW(switchUserDb(50));
+	    BOOST_REQUIRE_EQUAL(currentUserId_, 50);
+	    BOOST_REQUIRE_EQUAL(currentDb_, "ydd_50");
 	}
 
 	void test_switchUserDb_sameUserId()
 	{
-	    BOOST_REQUIRE_NO_THROW(switchUserDb(173025));
-	    BOOST_REQUIRE_EQUAL(currentUserId_, 173025);
-	    BOOST_REQUIRE_EQUAL(currentDb_, "ydd_173025");
+	    BOOST_REQUIRE_NO_THROW(switchUserDb(50));
+	    BOOST_REQUIRE_EQUAL(currentUserId_, 50);
+	    BOOST_REQUIRE_EQUAL(currentDb_, "ydd_50");
 
-	    BOOST_REQUIRE_NO_THROW(switchUserDb(173025));
-	    BOOST_REQUIRE_EQUAL(currentUserId_, 173025);
-	    BOOST_REQUIRE_EQUAL(currentDb_, "ydd_173025");
+	    BOOST_REQUIRE_NO_THROW(switchUserDb(50));
+	    BOOST_REQUIRE_EQUAL(currentUserId_, 50);
+	    BOOST_REQUIRE_EQUAL(currentDb_, "ydd_50");
 	}
 };
 

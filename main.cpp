@@ -5,7 +5,7 @@
 
 #include "deleteoldreports.h"
 #include "ydrgetversion.h"
-#include "ydtask.h"
+#include "ydbasetask.h"
 
 
 void timerHandler(const boost::system::error_code& /*e*/)
@@ -23,9 +23,9 @@ int main()
     try
     {
 	DbConn dbc;
-	YdTask ydt(dbc, 173025, 1);
+	YdBaseTask ydt(dbc, 50, 1);
 	std::string html = "POST /v4/json/ HTTP/1.1\r\nHost:api-sandbox.direct.yandex.ru\r\n";
-	ydt.log(YdTask::info, "m'\"test", &html);
+	ydt.log(YdBaseTask::info, "m'\"test", &html);
 
 	boost::asio::io_service io_service;
 	//DeleteOldReports dro(token, io_service);

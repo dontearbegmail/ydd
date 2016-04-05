@@ -19,6 +19,8 @@ namespace ydd
 	    static boost::asio::ip::tcp::resolver::iterator hostSandboxIt;
 	    static const std::string httpHeader;
 	    static const std::string httpHeaderSandbox;
+	    static const unsigned int PhrasesPerReport = 10;
+	    static const unsigned int MaxReports = 5;
 
 	private:
 	    static boost::asio::ssl::context initCtx();
