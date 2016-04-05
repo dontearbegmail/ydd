@@ -1,5 +1,9 @@
-#include "ydbasetask.h"
 #include "general.h"
+
+#define EXPAND_SQLKEYWORD_SSQLS_STATICS
+#include "sqlkeyword.h"
+
+#include "ydbasetask.h"
 
 namespace ydd
 {
@@ -93,6 +97,45 @@ namespace ydd
 	catch(const mysqlpp::Exception& e)
 	{
 	    msyslog(LOG_ERR, "Got a MySQL exception: %s", e.what());
+	    throw(e);
+	}
+    }
+
+    void YdBaseTask::dispatch()
+    {
+	for(std::vector<YdReport>::iterator it = reports_.begin();
+		it != reports_.end(); ++it)
+	{
+	    if(it->isFinished)
+	    {
+		// The report is all done: put it into the db and remove from reports_ vector
+	    }
+	}
+    }
+
+    void YdBaseTask::storeReport(YdReport& report)
+    {
+    }
+
+    /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
+    void YdBaseTask::storePhrase(YdPhrase& phrase, mysqlpp::Connection& con)
+    {
+	using namespace mysqlpp;
+	try
+	{
+	    Query query = con.query();
+	    {
+		Transaction trans(con,
+			mysqlpp::Transaction::serializable,
+			mysqlpp::Transaction::session);
+		query.insert(phrase.keywords.begin(), phrase.keywords.end());
+		query.execute();
+		trans.commit();
+	    }
+	}
+	catch(mysqlpp::Exception& e)
+	{
+	    msyslog(LOG_ERR, "Got mysqlpp::Exception: %s", e.what());
 	    throw(e);
 	}
     }

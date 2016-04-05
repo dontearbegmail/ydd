@@ -3,8 +3,10 @@
 
 #include "dbconn.h"
 #include <string>
+#include <vector>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
+#include "ydphrase.h"
 
 namespace ydd
 {
@@ -20,6 +22,14 @@ namespace ydd
 	    DbConn& dbc_;
 	    DbConn::UserIdType userId_;
 	    DbConn::TaskIdType taskId_;
+
+	    std::vector<YdReport> reports_;
+
+	    void dispatch();
+	    void storeReport(YdReport& report);
+
+	    /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
+	    void storePhrase(YdPhrase& phrase, mysqlpp::Connection& con);
 
 	    void logQuery(mysqlpp::Query& query, LogLevel level, const char* message, 
 		    std::string* html = NULL, std::string* os = NULL);
