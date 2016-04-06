@@ -228,6 +228,40 @@ class TestYdBaseTask : public YdBaseTask
 	    query.storein(tp_result);
 	    BOOST_REQUIRE(tp_result == expected);
 	}
+
+	void test_countFreePhrasesSlots_used3expected20()
+	{
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 20);
+	}
+
+	void test_countFreePhrasesSlots_used0expected50()
+	{
+	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 50);
+	}
+
+	void test_countFreePhrasesSlots_used5expected0()
+	{
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 0);
+	}
+
+	void test_countFreePhrasesSlots_used6expected0()
+	{
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 0);
+	}
 };
 
 struct FxYdBaseTask
@@ -320,3 +354,22 @@ BOOST_FIXTURE_TEST_CASE(storePhrase_simple, FxYdBaseTask)
     BOOST_REQUIRE_NO_THROW(tydt.test_storePhrase_simple(conn));
 }
 
+BOOST_FIXTURE_TEST_CASE(countFreePhrasesSlots_used3expected20, FxYdBaseTask)
+{
+    BOOST_REQUIRE_NO_THROW(tydt.test_countFreePhrasesSlots_used3expected20());
+}
+
+BOOST_FIXTURE_TEST_CASE(countFreePhrasesSlots_used0expected50, FxYdBaseTask)
+{
+    BOOST_REQUIRE_NO_THROW(tydt.test_countFreePhrasesSlots_used0expected50());
+}
+
+BOOST_FIXTURE_TEST_CASE(countFreePhrasesSlots_used5expected0, FxYdBaseTask)
+{
+    BOOST_REQUIRE_NO_THROW(tydt.test_countFreePhrasesSlots_used5expected0());
+}
+
+BOOST_FIXTURE_TEST_CASE(countFreePhrasesSlots_used6expected0, FxYdBaseTask)
+{
+    BOOST_REQUIRE_NO_THROW(tydt.test_countFreePhrasesSlots_used6expected0());
+}

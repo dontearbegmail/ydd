@@ -30,6 +30,7 @@ namespace ydd
 	     * before these both !!! */
 	    void storeReports(mysqlpp::Connection& conn);
 	    void storePhrase(YdPhrase& phrase, mysqlpp::Connection& conn);
+	    size_t countFreePhrasesSlots();
 
 	    void logQuery(mysqlpp::Query& query, LogLevel level, const char* message, 
 		    std::string* html = NULL, std::string* os = NULL);

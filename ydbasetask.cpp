@@ -4,6 +4,7 @@
 #include "phrases_keywords.h"
 
 #include "ydbasetask.h"
+#include "ydremote.h"
 
 namespace ydd
 {
@@ -155,5 +156,14 @@ namespace ydd
 	    msyslog(LOG_ERR, "Got mysqlpp::Exception: %s", e.what());
 	    throw(e);
 	}
+    }
+
+    size_t YdBaseTask::countFreePhrasesSlots()
+    {
+	size_t slots = 0;
+	ssize_t freeReports = YdRemote::MaxReports - reports_.size();
+	if(freeReports > 0)
+	    slots = freeReports * YdRemote::PhrasesPerReport;
+	return slots;
     }
 }
