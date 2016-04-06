@@ -103,29 +103,40 @@ namespace ydd
 
     void YdBaseTask::dispatch()
     {
-	for(std::vector<YdReport>::iterator it = reports_.begin();
-		it != reports_.end(); ++it)
+	using namespace mysqlpp;
+	dbc_.switchUserDb(userId_);
+	Connection& conn = dbc_.get();
+	storeReports(conn);
+    }
+
+    /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
+    void YdBaseTask::storeReports(mysqlpp::Connection& conn)
+    {
+	for(std::vector<YdReport>::iterator it_rep = reports_.begin();
+		it_rep != reports_.end(); ++it_rep)
 	{
-	    if(it->isFinished)
+	    if(it_rep->isFinished)
 	    {
 		// The report is all done: put it into the db and remove from reports_ vector
+		for(std::vector<YdPhrase>::iterator it = it_rep->phrases.begin();
+			it != it_rep->phrases.end(); ++it)
+		{
+		    storePhrase(*it, conn);
+		}
+		reports_.erase(it_rep);
 	    }
 	}
     }
 
-    void YdBaseTask::storeReport(YdReport& report)
-    {
-    }
-
     /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
-    void YdBaseTask::storePhrase(YdPhrase& phrase, mysqlpp::Connection& con)
+    void YdBaseTask::storePhrase(YdPhrase& phrase, mysqlpp::Connection& conn)
     {
 	using namespace mysqlpp;
 	try
 	{
-	    Query query = con.query();
+	    Query query = conn.query();
 	    {
-		Transaction trans(con);
+		Transaction trans(conn);
 		if(!phrase.keywords.empty())
 		{
 		    query.insert(phrase.keywords.begin(), phrase.keywords.end());
@@ -133,7 +144,7 @@ namespace ydd
 		}
 		/* UPDATE `tasks_phrases` SET `finished`= 1 WHERE `id` = phrase.id */
 		query << 
-		    "UPDATE `tasks_phrases` SET `finished`= 1 WHERE `id` = " <<
+		    "UPDATE `tasks_phrases` SET `finished` = 1 WHERE `id` = " <<
 		    phrase.id;
 		query.execute();
 		trans.commit();

@@ -26,10 +26,10 @@ namespace ydd
 	    std::vector<YdReport> reports_;
 
 	    void dispatch();
-	    void storeReport(YdReport& report);
-
-	    /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
-	    void storePhrase(YdPhrase& phrase, mysqlpp::Connection& con);
+	    /* Don't forget that dbc_.switchUserDb(userId_) should be called 
+	     * before these both !!! */
+	    void storeReports(mysqlpp::Connection& conn);
+	    void storePhrase(YdPhrase& phrase, mysqlpp::Connection& conn);
 
 	    void logQuery(mysqlpp::Query& query, LogLevel level, const char* message, 
 		    std::string* html = NULL, std::string* os = NULL);
