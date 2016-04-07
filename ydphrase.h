@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "phrases_keywords.h"
+#include "ydremote.h"
 
 namespace ydd
 {
@@ -18,6 +19,7 @@ namespace ydd
     {
 	std::vector<YdPhrase> phrases;
 	bool isFinished;
+	YdReport() : isFinished(false) {}
 	void reset()
 	{
 	    isFinished = false;

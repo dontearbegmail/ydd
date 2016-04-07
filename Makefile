@@ -26,7 +26,7 @@ ct:
 	rm -rf tests/tests tests/*.o
 
 tests/%.o : tests/%.cpp
-	$(CXX) $(TESTSCPPFLAGS) -c -o $@ $<
+	$(CXX) $(TESTSCPPFLAGS) -c -o $@ $< 
 
 tests: $(TESTSOBJS)
 	$(CXX) $(TESTSCPPFLAGS) -o tests/ydd-tests $(OBJS) $(TESTSOBJS);
