@@ -13,6 +13,12 @@ namespace ydd
 	userId_(userId),
 	taskId_(taskId)
     {
+	YdReport r;
+	for(Reports::size_type i = 0; i < YdRemote::MaxReports; i++)
+	{
+	    availableReports_.push(i);
+	    reports_.push_back(r);
+	}
     }
 
     YdBaseTask::~YdBaseTask()
@@ -108,24 +114,65 @@ namespace ydd
 	dbc_.switchUserDb(userId_);
 	Connection& conn = dbc_.get();
 	storeReports(conn);
+	size_t phrasesToGet = countFreePhrasesSlots();
+	if(phrasesToGet > 0)
+	{
+	}
+    }
+
+    /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
+    void YdBaseTask::getPhrasesFromDb(size_t numPhrases, mysqlpp::Connection& conn)
+    {
+	using namespace mysqlpp;
+	if(numPhrases == 0)
+	    return;
+	try
+	{
+	    Query query = conn.query();
+	    query << 
+		"SELECT `id`, `phrase` FROM `tasks_phrases` " 
+		"WHERE `taskid` = " << taskId_ << " AND `finished` = 0 LIMIT " << numPhrases;
+	}
+	catch(mysqlpp::Exception& e)
+	{
+	    msyslog(LOG_ERR, "Got mysqlpp::Exception: %s", e.what());
+	    throw(e);
+	}
+    }
+
+    void YdBaseTask::setReportAvailable(Reports::size_type i)
+    {
+	reports_[i].reset();
+	availableReports_.push(i);
+    }
+
+    bool YdBaseTask::getAvailableReport(Reports::size_type& i)
+    {
+	if(availableReports_.size() == 0)
+	    return false;
+	i = availableReports_.front();
+	availableReports_.pop();
+	return true;
     }
 
     /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
     void YdBaseTask::storeReports(mysqlpp::Connection& conn)
     {
-	for(std::vector<YdReport>::iterator it_rep = reports_.begin();
+	Reports::size_type i = 0;
+	for(Reports::iterator it_rep = reports_.begin();
 		it_rep != reports_.end(); ++it_rep)
 	{
 	    if(it_rep->isFinished)
 	    {
-		// The report is all done: put it into the db and remove from reports_ vector
+		// The report is all done: put it into the db and set available
 		for(std::vector<YdPhrase>::iterator it = it_rep->phrases.begin();
 			it != it_rep->phrases.end(); ++it)
 		{
 		    storePhrase(*it, conn);
 		}
-		reports_.erase(it_rep);
+		setReportAvailable(i);
 	    }
+	    i++;
 	}
     }
 
@@ -161,9 +208,10 @@ namespace ydd
     size_t YdBaseTask::countFreePhrasesSlots()
     {
 	size_t slots = 0;
-	ssize_t freeReports = YdRemote::MaxReports - reports_.size();
+	Reports::size_type freeReports = availableReports_.size();
 	if(freeReports > 0)
 	    slots = freeReports * YdRemote::PhrasesPerReport;
 	return slots;
     }
+
 }

@@ -231,9 +231,13 @@ class TestYdBaseTask : public YdBaseTask
 
 	void test_countFreePhrasesSlots_used3expected20()
 	{
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
+	    YdBaseTask::Reports::size_type i;
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 0);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 1);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 2);
 	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 20);
 	}
 
@@ -244,22 +248,35 @@ class TestYdBaseTask : public YdBaseTask
 
 	void test_countFreePhrasesSlots_used5expected0()
 	{
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
+	    YdBaseTask::Reports::size_type i;
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 0);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 1);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 2);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 3);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 4);
 	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 0);
 	}
 
 	void test_countFreePhrasesSlots_used6expected0()
 	{
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
-	    reports_.push_back({{}, false});
+	    YdBaseTask::Reports::size_type i;
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 0);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 1);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 2);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 3);
+	    BOOST_REQUIRE(getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 4);
+	    BOOST_REQUIRE(!getAvailableReport(i));
+	    BOOST_REQUIRE_EQUAL(i, 4);
 	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 0);
 	}
 };
