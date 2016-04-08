@@ -13,12 +13,6 @@ namespace ydd
 	userId_(userId),
 	taskId_(taskId)
     {
-	YdReport r;
-	for(Reports::size_type i = 0; i < YdRemote::MaxReports; i++)
-	{
-	    availableReports_.push(i);
-	    reports_.push_back(r);
-	}
     }
 
     YdBaseTask::~YdBaseTask()
@@ -140,26 +134,10 @@ namespace ydd
 	}
     }
 
-    void YdBaseTask::setReportAvailable(Reports::size_type i)
-    {
-	reports_[i].reset();
-	availableReports_.push(i);
-    }
-
-    bool YdBaseTask::getAvailableReport(Reports::size_type& i)
-    {
-	if(availableReports_.size() == 0)
-	    return false;
-	i = availableReports_.front();
-	availableReports_.pop();
-	return true;
-    }
-
     /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
     void YdBaseTask::storeReports(mysqlpp::Connection& conn)
     {
-	Reports::size_type i = 0;
-	for(Reports::iterator it_rep = reports_.begin();
+	for(std::vector<YdReport>::iterator it_rep = reports_.begin();
 		it_rep != reports_.end(); ++it_rep)
 	{
 	    if(it_rep->isFinished)
@@ -170,9 +148,8 @@ namespace ydd
 		{
 		    storePhrase(*it, conn);
 		}
-		setReportAvailable(i);
 	    }
-	    i++;
+	    reports_.erase(it_rep);
 	}
     }
 
@@ -208,7 +185,7 @@ namespace ydd
     size_t YdBaseTask::countFreePhrasesSlots()
     {
 	size_t slots = 0;
-	Reports::size_type freeReports = availableReports_.size();
+	ssize_t freeReports = YdRemote::MaxReports - reports_.size();
 	if(freeReports > 0)
 	    slots = freeReports * YdRemote::PhrasesPerReport;
 	return slots;

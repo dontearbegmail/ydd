@@ -24,11 +24,7 @@ namespace ydd
 	    DbConn::UserIdType userId_;
 	    DbConn::TaskIdType taskId_;
 
-	    typedef std::vector<YdReport> Reports;
-	    Reports reports_;
-	    std::queue<Reports::size_type> availableReports_;
-	    void setReportAvailable(Reports::size_type i);
-	    bool getAvailableReport(Reports::size_type& i);
+	    std::vector<YdReport> reports_;
 
 	    void dispatch();
 	    /* Don't forget that dbc_.switchUserDb(userId_) should be called 

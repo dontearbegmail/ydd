@@ -19,12 +19,6 @@ namespace ydd
     {
 	std::vector<YdPhrase> phrases;
 	bool isFinished;
-	YdReport() : isFinished(false) {}
-	void reset()
-	{
-	    isFinished = false;
-	    phrases.clear();
-	}
     };
 }
 

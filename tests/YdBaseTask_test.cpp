@@ -233,13 +233,9 @@ class TestYdBaseTask : public YdBaseTask
 
 	void test_countFreePhrasesSlots_used3expected20()
 	{
-	    YdBaseTask::Reports::size_type i;
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 0);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 1);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 2);
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
 	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 20);
 	}
 
@@ -250,190 +246,23 @@ class TestYdBaseTask : public YdBaseTask
 
 	void test_countFreePhrasesSlots_used5expected0()
 	{
-	    YdBaseTask::Reports::size_type i;
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 0);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 1);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 2);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 3);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 4);
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
 	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 0);
 	}
 
 	void test_countFreePhrasesSlots_used6expected0()
 	{
-	    YdBaseTask::Reports::size_type i;
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 0);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 1);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 2);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 3);
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 4);
-	    BOOST_REQUIRE(!getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 4);
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
 	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 0);
-	}
-
-	void __getAvailableReports(std::vector<Reports::size_type>& reports)
-	{
-	    reports.clear();
-	    std::queue<Reports::size_type> ar = availableReports_;
-	    while(!ar.empty())
-	    {
-		reports.push_back(ar.front());
-		ar.pop();
-	    }
-	}
-
-	bool  __checkReportsStates(std::vector<bool> states)
-	{
-	    bool ok = true;
-	    BOOST_REQUIRE_EQUAL(states.size(), reports_.size());
-	    for(size_t i = 0; (i < YdRemote::MaxReports) && ok; i++)
-	    {
-		//	BOOST_REQUIRE(reports_[i].isFinished == states[i]);
-		ok = (reports_[i].isFinished == states[i]);
-	    }
-	    return ok;
-	}
-
-	void __addSamplePhrases(YdReport& r)
-	{
-	    std::srand(unsigned(std::time(0)));
-	    size_t n = std::rand() % YdRemote::PhrasesPerReport;
-	    if(n == 0)
-		n = 14;
-	    for(size_t i = 0; i < n; i++)
-		r.phrases.push_back({0, "Sample phrase"});
-	}
-
-	void test_ar_constructor()
-	{
-	    std::vector<Reports::size_type> r, t;
-	    std::vector<bool> states = {false, false, false, false, false};
-	    t = {0, 1, 2, 3, 4};
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == t);
-	    BOOST_REQUIRE(__checkReportsStates(states));
-	}
-
-	void test_ar_1use_and_free()
-	{
-	    std::vector<Reports::size_type> r, t;
-	    std::vector<bool> states = {false, false, false, false, false};
-	    t = {1, 2, 3, 4};
-	    Reports::size_type i;
-
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 0);
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == t);
-	    BOOST_REQUIRE(__checkReportsStates(states));
-
-	    __addSamplePhrases(reports_[i]);
-	    reports_[i].isFinished = true;
-	    states[i] = true;
-	    BOOST_REQUIRE(__checkReportsStates(states));
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == t);
-	
-	    setReportAvailable(i);
-	    BOOST_REQUIRE(reports_[i].phrases.empty());
-	    __getAvailableReports(r);
-	    t.push_back(i);
-	    BOOST_REQUIRE(r == t);
-	}
-
-	void test_ar_complex()
-	{
-	    std::vector<Reports::size_type> r, t;
-	    std::vector<bool> states = {false, false, false, false, false};
-	    t = {1, 2, 3, 4};
-	    Reports::size_type i;
-
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE(getAvailableReport(i));
-
-	    BOOST_REQUIRE_EQUAL(i, 4);
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r.empty());
-	    BOOST_REQUIRE(__checkReportsStates(states));
-
-	    BOOST_REQUIRE(!getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 4);
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r.empty());
-	    BOOST_REQUIRE(__checkReportsStates(states));
-
-	    reports_[2].isFinished = true;
-	    BOOST_REQUIRE(__checkReportsStates({false, false, true, false, false}));
-	    setReportAvailable(2);
-	    BOOST_REQUIRE(__checkReportsStates({false, false, false, false, false}));
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == (t = {2}));
-
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 2);
-	    BOOST_REQUIRE(__checkReportsStates({false, false, false, false, false}));
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r.empty());
-
-	    BOOST_REQUIRE(!getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 2);
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r.empty());
-	    BOOST_REQUIRE(__checkReportsStates({false, false, false, false, false}));
-
-	    setReportAvailable(4);
-	    BOOST_REQUIRE(__checkReportsStates({false, false, false, false, false}));
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == (t = {4}));
-
-	    reports_[1].isFinished = true;
-	    BOOST_REQUIRE(__checkReportsStates({false, true, false, false, false}));
-
-	    setReportAvailable(0);
-	    BOOST_REQUIRE(__checkReportsStates({false, true, false, false, false}));
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == (t = {4, 0}));
-
-	    setReportAvailable(1);
-	    BOOST_REQUIRE(__checkReportsStates({false, false, false, false, false}));
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == (t = {4, 0, 1}));
-
-	    reports_[4].isFinished = true;
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE(__checkReportsStates({false, false, false, false, true}));
-	    BOOST_REQUIRE_EQUAL(i, 4);
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == (t = {0, 1}));
-
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 0);
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == (t = {1}));
-
-	    BOOST_REQUIRE(getAvailableReport(i));
-	    BOOST_REQUIRE_EQUAL(i, 1);
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r.empty());
-	    BOOST_REQUIRE(__checkReportsStates({false, false, false, false, true}));
-
-	    setReportAvailable(3);
-	    __getAvailableReports(r);
-	    BOOST_REQUIRE(r == (t = {3}));
 	}
 };
 
@@ -545,19 +374,4 @@ BOOST_FIXTURE_TEST_CASE(countFreePhrasesSlots_used5expected0, FxYdBaseTask)
 BOOST_FIXTURE_TEST_CASE(countFreePhrasesSlots_used6expected0, FxYdBaseTask)
 {
     BOOST_REQUIRE_NO_THROW(tydt.test_countFreePhrasesSlots_used6expected0());
-}
-
-BOOST_FIXTURE_TEST_CASE(ar_constructor, FxYdBaseTask)
-{
-    tydt.test_ar_constructor();
-}
-
-BOOST_FIXTURE_TEST_CASE(test_ar_1use_and_free, FxYdBaseTask)
-{
-    tydt.test_ar_1use_and_free();
-}
-
-BOOST_FIXTURE_TEST_CASE(test_ar_complex, FxYdBaseTask)
-{
-    tydt.test_ar_complex();
 }
