@@ -138,7 +138,7 @@ namespace ydd
     void YdBaseTask::storeReports(mysqlpp::Connection& conn)
     {
 	for(std::vector<YdReport>::iterator it_rep = reports_.begin();
-		it_rep != reports_.end(); ++it_rep)
+		it_rep != reports_.end(); )
 	{
 	    if(it_rep->isFinished)
 	    {
@@ -148,8 +148,12 @@ namespace ydd
 		{
 		    storePhrase(*it, conn);
 		}
+		it_rep = reports_.erase(it_rep);
 	    }
-	    reports_.erase(it_rep);
+	    else
+	    {
+		++it_rep;
+	    }
 	}
     }
 

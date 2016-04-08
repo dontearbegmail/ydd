@@ -264,6 +264,14 @@ class TestYdBaseTask : public YdBaseTask
 	    reports_.push_back({{}, false});
 	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 0);
 	}
+
+	void test_storeReports(mysqlpp::Connection& conn)
+	{
+	    mysqlpp::Query query = conn.query();
+	    dbc_.switchUserDb(userId_);
+	    reports_.push_back({{}, true});
+	    BOOST_REQUIRE_NO_THROW(storeReports(conn));
+	}
 };
 
 struct FxYdBaseTask
@@ -374,4 +382,9 @@ BOOST_FIXTURE_TEST_CASE(countFreePhrasesSlots_used5expected0, FxYdBaseTask)
 BOOST_FIXTURE_TEST_CASE(countFreePhrasesSlots_used6expected0, FxYdBaseTask)
 {
     BOOST_REQUIRE_NO_THROW(tydt.test_countFreePhrasesSlots_used6expected0());
+}
+
+BOOST_FIXTURE_TEST_CASE(storeReports, FxYdBaseTask)
+{
+    tydt.test_storeReports(conn);
 }
