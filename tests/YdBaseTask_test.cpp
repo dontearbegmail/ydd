@@ -5,6 +5,8 @@
 #include "YdBaseTask_test_tasks_phrases.h"
 #include <stdlib.h>
 #include <time.h>
+#include <algorithm>
+#include <functional>
 
 using namespace ydd;
 
@@ -265,12 +267,65 @@ class TestYdBaseTask : public YdBaseTask
 	    BOOST_REQUIRE_EQUAL(countFreePhrasesSlots(), 0);
 	}
 
-	void test_storeReports(mysqlpp::Connection& conn)
+	std::vector<bool> __getReportsStates()
 	{
-	    mysqlpp::Query query = conn.query();
+	    std::vector<bool> ret;
+	    for(std::vector<YdReport>::iterator it_rep = reports_.begin();
+		    it_rep != reports_.end(); ++it_rep)
+	    {
+		ret.push_back(it_rep->isFinished);
+	    }
+	    return ret;
+	}
+
+	void test_storeReports_simple(mysqlpp::Connection& conn)
+	{
 	    dbc_.switchUserDb(userId_);
 	    reports_.push_back({{}, true});
 	    BOOST_REQUIRE_NO_THROW(storeReports(conn));
+	    BOOST_REQUIRE(reports_.size() == 0);
+	}
+
+	void test_storeReports_noreports(mysqlpp::Connection& conn)
+	{
+	    dbc_.switchUserDb(userId_);
+	    BOOST_REQUIRE_NO_THROW(storeReports(conn));
+	    BOOST_REQUIRE(reports_.size() == 0);
+	}
+
+	bool phrases_predicate(const YdPhrase& p1, const YdPhrase& p2)
+	{
+	    bool keywordsEqual = p1.keywords == p2.keywords;
+	    return ((p1.id == p2.id) && (p1.value == p2.value) && keywordsEqual);
+	}
+
+	bool areEqualPV(std::vector<YdPhrase> pv, YdReport r)
+	{
+	    using namespace std;
+	    if(r.phrases.size() != pv.size())
+		return false;
+	    return std::equal(r.phrases.begin(), r.phrases.end(), pv.begin(), 
+		    bind(&TestYdBaseTask::phrases_predicate, this, placeholders::_1, placeholders::_2));
+	}
+
+	void test_storeReports_complex(mysqlpp::Connection& conn)
+	{
+	    std::vector<YdPhrase> p0 = {{132, "phrase0_1"}, {173, "phrase0_2"}};
+	    std::vector<YdPhrase> p1 = {{40, "phrase1_1"}, {7, "phrase1_2"}, {33, "phrase1_3"}};
+	    std::vector<YdPhrase> p2 = {{200, "phrase2_1"}};
+	    std::vector<YdPhrase> p3 = {{400, "phrase3_1"}, {301, "phrase3_2"}};
+	    std::vector<YdPhrase> p4 = {{201, "phrase4_1"}, {3, "phrase4_2"}, {44, "phrase4_3"}, {170, "phrase4_4"}};
+
+	    reports_.push_back({p0, false});
+	    reports_.push_back({p1, true});
+	    reports_.push_back({p2, false});
+	    reports_.push_back({p3, false});
+	    reports_.push_back({p4, true});
+
+	    dbc_.switchUserDb(userId_);
+	    BOOST_REQUIRE_NO_THROW(storeReports(conn));
+	    BOOST_REQUIRE(reports_.size() == 3);
+	    BOOST_REQUIRE(areEqualPV(p0, reports_[0]));
 	}
 };
 
@@ -384,7 +439,17 @@ BOOST_FIXTURE_TEST_CASE(countFreePhrasesSlots_used6expected0, FxYdBaseTask)
     BOOST_REQUIRE_NO_THROW(tydt.test_countFreePhrasesSlots_used6expected0());
 }
 
-BOOST_FIXTURE_TEST_CASE(storeReports, FxYdBaseTask)
+BOOST_FIXTURE_TEST_CASE(storeReports_simple, FxYdBaseTask)
 {
-    tydt.test_storeReports(conn);
+    tydt.test_storeReports_simple(conn);
+}
+
+BOOST_FIXTURE_TEST_CASE(storeReports_noreports, FxYdBaseTask)
+{
+    tydt.test_storeReports_noreports(conn);
+}
+
+BOOST_FIXTURE_TEST_CASE(storeReports_complex, FxYdBaseTask)
+{
+    tydt.test_storeReports_complex(conn);
 }
