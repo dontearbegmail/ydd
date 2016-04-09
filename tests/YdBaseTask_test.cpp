@@ -308,7 +308,31 @@ class TestYdBaseTask : public YdBaseTask
 		    bind(&TestYdBaseTask::phrases_predicate, this, placeholders::_1, placeholders::_2));
 	}
 
-	void test_storeReports_complex(mysqlpp::Connection& conn)
+	void test_storeReports_none(mysqlpp::Connection& conn)
+	{
+	    std::vector<YdPhrase> p0 = {{132, "phrase0_1"}, {173, "phrase0_2"}};
+	    std::vector<YdPhrase> p1 = {{40, "phrase1_1"}, {7, "phrase1_2"}, {33, "phrase1_3"}};
+	    std::vector<YdPhrase> p2 = {{200, "phrase2_1"}};
+	    std::vector<YdPhrase> p3 = {{400, "phrase3_1"}, {301, "phrase3_2"}};
+	    std::vector<YdPhrase> p4 = {{201, "phrase4_1"}, {3, "phrase4_2"}, {44, "phrase4_3"}, {170, "phrase4_4"}};
+
+	    reports_.push_back({p0, false});
+	    reports_.push_back({p1, false});
+	    reports_.push_back({p2, false});
+	    reports_.push_back({p3, false});
+	    reports_.push_back({p4, false});
+
+	    dbc_.switchUserDb(userId_);
+	    BOOST_REQUIRE_NO_THROW(storeReports(conn));
+	    BOOST_REQUIRE(reports_.size() == 5);
+	    BOOST_REQUIRE(areEqualPV(p0, reports_[0]));
+	    BOOST_REQUIRE(areEqualPV(p1, reports_[1]));
+	    BOOST_REQUIRE(areEqualPV(p2, reports_[2]));
+	    BOOST_REQUIRE(areEqualPV(p3, reports_[3]));
+	    BOOST_REQUIRE(areEqualPV(p4, reports_[4]));
+	}
+
+	void test_storeReports_1and4(mysqlpp::Connection& conn)
 	{
 	    std::vector<YdPhrase> p0 = {{132, "phrase0_1"}, {173, "phrase0_2"}};
 	    std::vector<YdPhrase> p1 = {{40, "phrase1_1"}, {7, "phrase1_2"}, {33, "phrase1_3"}};
@@ -326,6 +350,50 @@ class TestYdBaseTask : public YdBaseTask
 	    BOOST_REQUIRE_NO_THROW(storeReports(conn));
 	    BOOST_REQUIRE(reports_.size() == 3);
 	    BOOST_REQUIRE(areEqualPV(p0, reports_[0]));
+	    BOOST_REQUIRE(areEqualPV(p2, reports_[1]));
+	    BOOST_REQUIRE(areEqualPV(p3, reports_[2]));
+	}
+
+	void test_storeReports_all(mysqlpp::Connection& conn)
+	{
+	    std::vector<YdPhrase> p0 = {{132, "phrase0_1"}, {173, "phrase0_2"}};
+	    std::vector<YdPhrase> p1 = {{40, "phrase1_1"}, {7, "phrase1_2"}, {33, "phrase1_3"}};
+	    std::vector<YdPhrase> p2 = {{200, "phrase2_1"}};
+	    std::vector<YdPhrase> p3 = {{400, "phrase3_1"}, {301, "phrase3_2"}};
+	    std::vector<YdPhrase> p4 = {{201, "phrase4_1"}, {3, "phrase4_2"}, {44, "phrase4_3"}, {170, "phrase4_4"}};
+
+	    reports_.push_back({p0, true});
+	    reports_.push_back({p1, true});
+	    reports_.push_back({p2, true});
+	    reports_.push_back({p3, true});
+	    reports_.push_back({p4, true});
+
+	    dbc_.switchUserDb(userId_);
+	    BOOST_REQUIRE_NO_THROW(storeReports(conn));
+	    BOOST_REQUIRE(reports_.size() == 0);
+	}
+
+	void test_storeReports_last(mysqlpp::Connection& conn)
+	{
+	    std::vector<YdPhrase> p0 = {{132, "phrase0_1"}, {173, "phrase0_2"}};
+	    std::vector<YdPhrase> p1 = {{40, "phrase1_1"}, {7, "phrase1_2"}, {33, "phrase1_3"}};
+	    std::vector<YdPhrase> p2 = {{200, "phrase2_1"}};
+	    std::vector<YdPhrase> p3 = {{400, "phrase3_1"}, {301, "phrase3_2"}};
+	    std::vector<YdPhrase> p4 = {{201, "phrase4_1"}, {3, "phrase4_2"}, {44, "phrase4_3"}, {170, "phrase4_4"}};
+
+	    reports_.push_back({p0, false});
+	    reports_.push_back({p1, false});
+	    reports_.push_back({p2, false});
+	    reports_.push_back({p3, false});
+	    reports_.push_back({p4, true});
+
+	    dbc_.switchUserDb(userId_);
+	    BOOST_REQUIRE_NO_THROW(storeReports(conn));
+	    BOOST_REQUIRE(reports_.size() == 4);
+	    BOOST_REQUIRE(areEqualPV(p0, reports_[0]));
+	    BOOST_REQUIRE(areEqualPV(p1, reports_[1]));
+	    BOOST_REQUIRE(areEqualPV(p2, reports_[2]));
+	    BOOST_REQUIRE(areEqualPV(p3, reports_[3]));
 	}
 };
 
@@ -449,7 +517,22 @@ BOOST_FIXTURE_TEST_CASE(storeReports_noreports, FxYdBaseTask)
     tydt.test_storeReports_noreports(conn);
 }
 
-BOOST_FIXTURE_TEST_CASE(storeReports_complex, FxYdBaseTask)
+BOOST_FIXTURE_TEST_CASE(storeReports_1and4, FxYdBaseTask)
 {
-    tydt.test_storeReports_complex(conn);
+    tydt.test_storeReports_1and4(conn);
+}
+
+BOOST_FIXTURE_TEST_CASE(storeReports_none, FxYdBaseTask)
+{
+    tydt.test_storeReports_none(conn);
+}
+
+BOOST_FIXTURE_TEST_CASE(storeReports_all, FxYdBaseTask)
+{
+    tydt.test_storeReports_all(conn);
+}
+
+BOOST_FIXTURE_TEST_CASE(storeReports_last, FxYdBaseTask)
+{
+    tydt.test_storeReports_last(conn);
 }
