@@ -122,10 +122,33 @@ namespace ydd
 	    return;
 	try
 	{
+	    std::vector<YdPhrase>* phrases = NULL;
+	    size_t totalPhrases = 0;
+	    Row row;
+	    unsigned long id;
+	    std::string value;
+
 	    Query query = conn.query();
 	    query << 
 		"SELECT `id`, `phrase` FROM `tasks_phrases` " 
 		"WHERE `taskid` = " << taskId_ << " AND `finished` = 0 LIMIT " << numPhrases;
+	    UseQueryResult res = query.use();
+	    while(row = res.fetch_row())
+	    {
+		id = row[0];
+		value.assign((const char* )row[1]);;
+		if(phrases == NULL)
+		{
+		    reports_.push_back({{}, false});
+		    phrases = &(reports_.back().phrases);
+		}
+		phrases->push_back({id, value});
+		totalPhrases++;
+		if(phrases->size() == YdRemote::PhrasesPerReport)
+		{
+		    phrases = NULL;
+		}
+	    }
 	}
 	catch(mysqlpp::Exception& e)
 	{
