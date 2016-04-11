@@ -26,6 +26,8 @@ int main()
 	YdBaseTask ydt(dbc, 50, 1);
 	std::string html = "POST /v4/json/ HTTP/1.1\r\nHost:api-sandbox.direct.yandex.ru\r\n";
 	ydt.log(YdBaseTask::info, "m'\"test", &html);
+	//mysqlpp::Connection& conn = dbc.get();
+	//ydt.getPhrasesFromDb(10, conn);
 
 	boost::asio::io_service io_service;
 	//DeleteOldReports dro(token, io_service);

@@ -395,6 +395,119 @@ class TestYdBaseTask : public YdBaseTask
 	    BOOST_REQUIRE(areEqualPV(p2, reports_[2]));
 	    BOOST_REQUIRE(areEqualPV(p3, reports_[3]));
 	}
+
+	bool reportCheck(YdReport& report, unsigned long start, unsigned long finish, bool isFinished)
+	{
+	    if(report.isFinished != isFinished)
+		return false;
+	    if(report.phrases.size() != (finish - start + 1))
+		return false;
+	    unsigned long id = start;
+	    std::string v = "phrase", t;
+	    for(std::vector<YdPhrase>::iterator it = report.phrases.begin();
+		    it != report.phrases.end(); ++it, ++id)
+	    {
+		t = v;
+		t.append(std::to_string(id));
+		if(it->value != t)
+		    return false;
+	    }
+	    return true;
+	}
+
+	void test_getPhrasesFromDb_simple(mysqlpp::Connection& conn)
+	{
+	    mysqlpp::Query query = conn.query();
+	    dbc_.switchUserDb(userId_);
+	    flush_storePhrase(query);
+	    query << 
+		"CALL `sp_fill_test_tasks_phrases_set`(1, 7, 0, 1);" <<
+		"CALL `sp_fill_test_tasks_phrases_set`(21, 24, 0, 2);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(71, 72, 0, 7);";
+	    query.exec();
+	    flushQuery(query);
+
+	    size_t n = countFreePhrasesSlots();
+	    BOOST_REQUIRE_EQUAL(n, 50);
+	    getPhrasesFromDb(n, conn);
+	    BOOST_REQUIRE_EQUAL(reports_.size(), 1);
+	    BOOST_REQUIRE(reportCheck(reports_[0], 1, 7, false));
+	}
+
+	void test_getPhrasesFromDb_17phrases_1freereport(mysqlpp::Connection& conn)
+	{
+	    mysqlpp::Query query = conn.query();
+	    dbc_.switchUserDb(userId_);
+	    flush_storePhrase(query);
+	    query << 
+		"CALL `sp_fill_test_tasks_phrases_set`(1, 7, 0, 1);" <<
+		"CALL `sp_fill_test_tasks_phrases_set`(21, 37, 0, 2);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(71, 72, 0, 7);";
+	    query.exec();
+	    flushQuery(query);
+
+	    taskId_ = 2;
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    size_t n = countFreePhrasesSlots();
+	    BOOST_REQUIRE_EQUAL(n, 10);
+	    getPhrasesFromDb(n, conn);
+	    BOOST_REQUIRE_EQUAL(reports_.size(), 5);
+	    BOOST_REQUIRE(reportCheck(reports_[4], 21, 30, false));
+	}
+
+	void test_getPhrasesFromDb_13phrases_2freereports(mysqlpp::Connection& conn)
+	{
+	    mysqlpp::Query query = conn.query();
+	    dbc_.switchUserDb(userId_);
+	    flush_storePhrase(query);
+	    query << 
+		"CALL `sp_fill_test_tasks_phrases_set`(1, 7, 0, 1);" <<
+		"CALL `sp_fill_test_tasks_phrases_set`(21, 37, 0, 2);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(71, 83, 0, 7);";
+	    query.exec();
+	    flushQuery(query);
+
+	    taskId_ = 7;
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    size_t n = countFreePhrasesSlots();
+	    BOOST_REQUIRE_EQUAL(n, 20);
+	    getPhrasesFromDb(n, conn);
+	    BOOST_REQUIRE_EQUAL(reports_.size(), 5);
+	    BOOST_REQUIRE(reportCheck(reports_[3], 71, 80, false));
+	    BOOST_REQUIRE(reportCheck(reports_[4], 81, 83, false));
+	}
+	
+	void test_getPhrasesFromDb_10phrases_1freereport_readyPhrasesPresent(mysqlpp::Connection& conn)
+	{
+	    mysqlpp::Query query = conn.query();
+	    dbc_.switchUserDb(userId_);
+	    flush_storePhrase(query);
+	    query << 
+		"CALL `sp_fill_test_tasks_phrases_set`(1, 7, 0, 1);" <<
+		"CALL `sp_fill_test_tasks_phrases_set`(8, 12, 1, 1);" <<
+		"CALL `sp_fill_test_tasks_phrases_set`(21, 37, 1, 2);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(38, 47, 0, 2);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(71, 83, 1, 7);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(84, 110, 1, 7);";
+	    query.exec();
+	    flushQuery(query);
+
+	    taskId_ = 2;
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    reports_.push_back({{}, false});
+	    size_t n = countFreePhrasesSlots();
+	    BOOST_REQUIRE_EQUAL(n, 10);
+	    getPhrasesFromDb(n, conn);
+	    BOOST_REQUIRE_EQUAL(reports_.size(), 5);
+	    BOOST_REQUIRE(reportCheck(reports_[4], 38, 47, false));
+	}
 };
 
 struct FxYdBaseTask
@@ -536,3 +649,19 @@ BOOST_FIXTURE_TEST_CASE(storeReports_last, FxYdBaseTask)
 {
     tydt.test_storeReports_last(conn);
 }
+
+BOOST_FIXTURE_TEST_CASE(getPhrasesFromDb_simple, FxYdBaseTask)
+{
+    tydt.test_getPhrasesFromDb_simple(conn);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_getPhrasesFromDb_17phrases_1freereport, FxYdBaseTask)
+{
+    tydt.test_getPhrasesFromDb_17phrases_1freereport(conn);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_getPhrasesFromDb_13phrases_2freereports, FxYdBaseTask)
+{
+    tydt.test_getPhrasesFromDb_13phrases_2freereports(conn);
+}
+

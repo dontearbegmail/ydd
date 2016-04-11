@@ -109,21 +109,24 @@ namespace ydd
 	Connection& conn = dbc_.get();
 	storeReports(conn);
 	size_t phrasesToGet = countFreePhrasesSlots();
-	if(phrasesToGet > 0)
-	{
-	}
+	if(phrasesToGet == 0)
+	    return;
+	/*size_t dispatchedReports = reports_.size();
+	size_t newPhrasesCount = getPhrasesFromDb(phrasesToGet, conn);
+	<< reports to dispatch = reports_.size() - dispatchedReports; >>
+	*/
     }
 
     /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
-    void YdBaseTask::getPhrasesFromDb(size_t numPhrases, mysqlpp::Connection& conn)
+    size_t YdBaseTask::getPhrasesFromDb(size_t numPhrases, mysqlpp::Connection& conn)
     {
 	using namespace mysqlpp;
+	size_t totalPhrases = 0;
 	if(numPhrases == 0)
-	    return;
+	    return 0;
 	try
 	{
 	    std::vector<YdPhrase>* phrases = NULL;
-	    size_t totalPhrases = 0;
 	    Row row;
 	    unsigned long id;
 	    std::string value;
@@ -136,7 +139,7 @@ namespace ydd
 	    while(row = res.fetch_row())
 	    {
 		id = row[0];
-		value.assign((const char* )row[1]);;
+		value.assign((const char*)row[1]);;
 		if(phrases == NULL)
 		{
 		    reports_.push_back({{}, false});
@@ -155,6 +158,7 @@ namespace ydd
 	    msyslog(LOG_ERR, "Got mysqlpp::Exception: %s", e.what());
 	    throw(e);
 	}
+	return totalPhrases;
     }
 
     /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
@@ -165,7 +169,7 @@ namespace ydd
 	{
 	    if(it_rep->isFinished)
 	    {
-		// The report is all done: put it into the db and set available
+		// The report is all done: put it into the db and remove from reports_
 		for(std::vector<YdPhrase>::iterator it = it_rep->phrases.begin();
 			it != it_rep->phrases.end(); ++it)
 		{

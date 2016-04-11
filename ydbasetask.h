@@ -31,7 +31,7 @@ namespace ydd
 	     * before these three !!! */
 	    void storeReports(mysqlpp::Connection& conn);
 	    void storePhrase(YdPhrase& phrase, mysqlpp::Connection& conn);
-	    void getPhrasesFromDb(size_t numPhrases, mysqlpp::Connection& conn);
+	    size_t getPhrasesFromDb(size_t numPhrases, mysqlpp::Connection& conn);
 
 	    size_t countFreePhrasesSlots();
 
