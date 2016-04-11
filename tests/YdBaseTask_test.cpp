@@ -508,6 +508,33 @@ class TestYdBaseTask : public YdBaseTask
 	    BOOST_REQUIRE_EQUAL(reports_.size(), 5);
 	    BOOST_REQUIRE(reportCheck(reports_[4], 38, 47, false));
 	}
+
+	void test_getPhrasesFromDb_73phrases_5freereports_readyPhrasesPresent(mysqlpp::Connection& conn)
+	{
+	    mysqlpp::Query query = conn.query();
+	    dbc_.switchUserDb(userId_);
+	    flush_storePhrase(query);
+	    query << 
+		"CALL `sp_fill_test_tasks_phrases_set`(1, 7, 0, 1);" <<
+		"CALL `sp_fill_test_tasks_phrases_set`(8, 12, 1, 1);" <<
+		"CALL `sp_fill_test_tasks_phrases_set`(31, 43, 1, 2);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(44, 116, 0, 2);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(171, 183, 1, 7);" << 
+		"CALL `sp_fill_test_tasks_phrases_set`(184, 210, 0, 7);";
+	    query.exec();
+	    flushQuery(query);
+
+	    taskId_ = 2;
+	    size_t n = countFreePhrasesSlots();
+	    BOOST_REQUIRE_EQUAL(n, 50);
+	    getPhrasesFromDb(n, conn);
+	    BOOST_REQUIRE_EQUAL(reports_.size(), 5);
+	    BOOST_REQUIRE(reportCheck(reports_[0], 44, 53, false));
+	    BOOST_REQUIRE(reportCheck(reports_[1], 54, 63, false));
+	    BOOST_REQUIRE(reportCheck(reports_[2], 64, 73, false));
+	    BOOST_REQUIRE(reportCheck(reports_[3], 74, 83, false));
+	    BOOST_REQUIRE(reportCheck(reports_[4], 84, 93, false));
+	}
 };
 
 struct FxYdBaseTask
@@ -663,5 +690,10 @@ BOOST_FIXTURE_TEST_CASE(test_getPhrasesFromDb_17phrases_1freereport, FxYdBaseTas
 BOOST_FIXTURE_TEST_CASE(test_getPhrasesFromDb_13phrases_2freereports, FxYdBaseTask)
 {
     tydt.test_getPhrasesFromDb_13phrases_2freereports(conn);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_getPhrasesFromDb_73phrases_5freereports_readyPhrasesPresent, FxYdBaseTask)
+{
+    tydt.test_getPhrasesFromDb_73phrases_5freereports_readyPhrasesPresent(conn);
 }
 
