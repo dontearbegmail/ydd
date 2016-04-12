@@ -17,7 +17,6 @@ namespace ydd
 	    DbConn();
 	    void switchUserDb(UserIdType userId);
 	    void switchDbTasks();
-	    void check();
 	    mysqlpp::Connection& get();
 
 	protected:
@@ -25,6 +24,7 @@ namespace ydd
 	    UserIdType currentUserId_;
 	    std::string currentDb_;
 
+	    void check();
 	    void switchDb(std::string& dbName);
     };
 }

@@ -120,6 +120,7 @@ namespace ydd
 	if((newPhrasesCount == 0) && dispatchedReports == 0)
 	{
 	    /* Mark the task as completed in the DB */
+	    setCompleted();
 	    /* ... and invoke the upper level callback for the task completion */
 	    if(callback_)
 		ios_.post(callback_);
@@ -135,6 +136,20 @@ namespace ydd
     void YdBaseTask::setCompleted(mysqlpp::Connection& conn)
     {
 	using namespace mysqlpp;
+	dbc_.switchDbTasks();
+	Query query = conn.query();
+	try
+	{
+	    query << "UPDATE `tasks` SET `finished` = CURRENT_TIMESTAMP "
+		"WHERE `id` = " << taskId_;
+	    query.execute();
+	}
+	catch(mysqlpp::Exception& e)
+	{
+	    msyslog(LOG_ERR, "Got mysqlpp::Exception: %s", e.what());
+	    throw(e);
+	}
+	dbc_.switchUserDb(userId_);
     }
 
     void YdBaseTask::startReportProcessing(YdReport& report)
