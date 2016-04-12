@@ -25,6 +25,30 @@ namespace ydd
 	}
     }
 
+    void DbConn::switchDbTasks()
+    {
+	std::string name = YddConf::DbPrefix + "tasks";
+	if(currentDb_ == name)
+	    return;
+	switchDb(name);
+	currentUserId_ = 0;
+	currentDb_ = name;
+    }
+
+    void DbConn::switchDb(std::string& dbName)
+    {
+	try
+	{
+	    connection_.select_db(dbName);
+	}
+	catch(const mysqlpp::Exception& e)
+	{
+	    msyslog(LOG_ERR, "Got exception while trying to switch db to "
+		    "`%s`: %s", dbName.c_str(), e.what());
+	    throw(e);
+	}
+    }
+
     void DbConn::switchUserDb(UserIdType userId)
     {
 	using namespace std;
@@ -32,16 +56,7 @@ namespace ydd
 	    return;
 	string newDb = YddConf::DbPrefix;
 	newDb.append(to_string(userId));
-	try
-	{
-	    connection_.select_db(newDb);
-	}
-	catch(const mysqlpp::Exception& e)
-	{
-	    msyslog(LOG_ERR, "Got exception while trying to switch user db to "
-		    USER_ID_TYPE_PRINTF_FORMAT": %s", userId, e.what());
-	    throw(e);
-	}
+	switchDb(newDb);
 	currentUserId_ = userId;
 	currentDb_ = newDb;
     }

@@ -22,20 +22,18 @@ int main()
     // what is 'reactor pattern?
     try
     {
+	boost::asio::io_service ios;
 	DbConn dbc;
-	YdBaseTask ydt(dbc, 50, 1);
+	YdBaseTask ydt(ios, dbc, 50, 1);
 	std::string html = "POST /v4/json/ HTTP/1.1\r\nHost:api-sandbox.direct.yandex.ru\r\n";
 	ydt.log(YdBaseTask::info, "m'\"test", &html);
-	//mysqlpp::Connection& conn = dbc.get();
-	//ydt.getPhrasesFromDb(10, conn);
 
-	boost::asio::io_service io_service;
-	//DeleteOldReports dro(token, io_service);
-	//io_service.post(boost::bind(&DeleteOldReports::run, &dro));
+	/* DeleteOldReports dro(token, io_service);
+	io_service.post(boost::bind(&DeleteOldReports::run, &dro));
 	YdrGetVersion r(token, io_service, true, NULL);
 	r.run();
-	//io_service.run();
-	std::cout << r.getJsonResponse() << std::endl;
+	io_service.run();
+	std::cout << r.getJsonResponse() << std::endl;*/
     }
     catch (const mysqlpp::ConnectionFailed& err) {
 	cerr << "Failed to connect to database server: " <<

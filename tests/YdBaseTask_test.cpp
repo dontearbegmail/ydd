@@ -13,8 +13,9 @@ using namespace ydd;
 class TestYdBaseTask : public YdBaseTask
 {
     public:
-	TestYdBaseTask(DbConn& dbc, DbConn::UserIdType userId, DbConn::TaskIdType taskId) : 
-	    YdBaseTask(dbc, userId, taskId)
+	TestYdBaseTask(boost::asio::io_service& ios, DbConn& dbc, 
+		DbConn::UserIdType userId, DbConn::TaskIdType taskId) : 
+	    YdBaseTask(ios, dbc, userId, taskId)
 	{
 	    using namespace mysqlpp;
 	    dbc_.switchUserDb(userId_);
@@ -540,15 +541,17 @@ class TestYdBaseTask : public YdBaseTask
 struct FxYdBaseTask
 {
     FxYdBaseTask() :
+	ios(),
 	dbc(),
 	userId(50),
 	taskId(1),
-	tydt(dbc, userId, taskId),
+	tydt(ios, dbc, userId, taskId),
 	conn(dbc.get()),
 	query(conn.query())
     {
     }
 
+    boost::asio::io_service ios;
     DbConn dbc;
     DbConn::UserIdType userId;
     DbConn::TaskIdType taskId;

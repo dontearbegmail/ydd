@@ -8,11 +8,14 @@
 
 namespace ydd
 {
-    YdBaseTask::YdBaseTask(DbConn& dbc, DbConn::UserIdType userId, DbConn::TaskIdType taskId) :
+    YdBaseTask::YdBaseTask(boost::asio::io_service& ios, DbConn& dbc, 
+	    DbConn::UserIdType userId, DbConn::TaskIdType taskId) :
+	ios_(ios),
 	dbc_(dbc),
 	userId_(userId),
 	taskId_(taskId)
     {
+	// ios.post(<delete old reports with callback to this->dispatch()>);
     }
 
     YdBaseTask::~YdBaseTask()
@@ -111,10 +114,31 @@ namespace ydd
 	size_t phrasesToGet = countFreePhrasesSlots();
 	if(phrasesToGet == 0)
 	    return;
-	/*size_t dispatchedReports = reports_.size();
+	size_t dispatchedReports = reports_.size();
 	size_t newPhrasesCount = getPhrasesFromDb(phrasesToGet, conn);
-	<< reports to dispatch = reports_.size() - dispatchedReports; >>
-	*/
+	/* The task is finished */
+	if((newPhrasesCount == 0) && dispatchedReports == 0)
+	{
+	    /* Mark the task as completed in the DB */
+	    /* ... and invoke the upper level callback for the task completion */
+	    if(callback_)
+		ios_.post(callback_);
+	    return;
+	}
+	/* Start processing of each new report */
+	for(size_t i = dispatchedReports; i < reports_.size(); i++)
+	{
+	    startReportProcessing(reports_[i]);
+	}
+    }
+
+    void YdBaseTask::setCompleted(mysqlpp::Connection& conn)
+    {
+	using namespace mysqlpp;
+    }
+
+    void YdBaseTask::startReportProcessing(YdReport& report)
+    {
     }
 
     /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
