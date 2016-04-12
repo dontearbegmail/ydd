@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include "../general.h"
 #include "YdBaseTask_test_tasks_phrases.h"
+#include "YdBaseTask_test_tasks.h"
 #include <stdlib.h>
 #include <time.h>
 #include <algorithm>
@@ -536,6 +537,47 @@ class TestYdBaseTask : public YdBaseTask
 	    BOOST_REQUIRE(reportCheck(reports_[3], 74, 83, false));
 	    BOOST_REQUIRE(reportCheck(reports_[4], 84, 93, false));
 	}
+
+	void flushTasks(mysqlpp::Query& query)
+	{
+	    dbc_.switchDbTasks();
+	    query << "UPDATE `tasks` SET `finished` = NULL";
+	    query.exec();
+	    flushQuery(query);
+	    dbc_.switchUserDb(userId_);
+	}
+
+	void test_setCompleted_simple(mysqlpp::Query& query, mysqlpp::Connection& conn)
+	{
+	    flushTasks(query);
+	    taskId_ = 4;
+
+	    std::vector<YdBaseTask_test_tasks> tp_result, expected;
+	    dbc_.switchDbTasks();
+	    query << "SELECT `id`, `finished` FROM `tasks`";
+	    query.storein(expected);
+	    std::vector<YdBaseTask_test_tasks>::iterator it;
+
+	    it = std::find_if(expected.begin(), expected.end(), 
+		    [this](YdBaseTask_test_tasks& v) {return this->taskId_ == v.id;});
+	    YdBaseTask_test_tasks et = *it;
+	    expected.erase(it);
+
+	    BOOST_REQUIRE_NO_THROW(setCompleted(conn));
+
+	    dbc_.switchDbTasks();
+	    query << "SELECT `id`, `finished` FROM `tasks`";
+	    query.storein(tp_result);
+	    it = std::find_if(tp_result.begin(), tp_result.end(), 
+		    [this](YdBaseTask_test_tasks& v) {return this->taskId_ == v.id;});
+	    YdBaseTask_test_tasks tt = *it;
+	    tp_result.erase(it);
+
+	    BOOST_REQUIRE(tp_result == expected);
+	    BOOST_REQUIRE(tt.id == et.id);
+	    BOOST_REQUIRE(tt.finished != mysqlpp::null);
+	    BOOST_REQUIRE(et.finished == mysqlpp::null);
+	}
 };
 
 struct FxYdBaseTask
@@ -700,3 +742,7 @@ BOOST_FIXTURE_TEST_CASE(test_getPhrasesFromDb_73phrases_5freereports_readyPhrase
     tydt.test_getPhrasesFromDb_73phrases_5freereports_readyPhrasesPresent(conn);
 }
 
+BOOST_FIXTURE_TEST_CASE(test_setCompleted_simple, FxYdBaseTask)
+{
+    tydt.test_setCompleted_simple(query, conn);
+}

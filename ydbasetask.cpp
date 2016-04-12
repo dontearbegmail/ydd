@@ -120,7 +120,7 @@ namespace ydd
 	if((newPhrasesCount == 0) && dispatchedReports == 0)
 	{
 	    /* Mark the task as completed in the DB */
-	    setCompleted();
+	    setCompleted(conn);
 	    /* ... and invoke the upper level callback for the task completion */
 	    if(callback_)
 		ios_.post(callback_);
