@@ -117,7 +117,7 @@ namespace ydd
 	size_t dispatchedReports = reports_.size();
 	size_t newPhrasesCount = getPhrasesFromDb(phrasesToGet, conn);
 	/* The task is finished */
-	if((newPhrasesCount == 0) && dispatchedReports == 0)
+	if(newPhrasesCount == 0 && dispatchedReports == 0)
 	{
 	    /* Mark the task as completed in the DB */
 	    setCompleted(conn);
@@ -126,11 +126,15 @@ namespace ydd
 		ios_.post(callback_);
 	    return;
 	}
-	/* Start processing of each new report */
+	/* Start processing new reports */
 	for(size_t i = dispatchedReports; i < reports_.size(); i++)
 	{
 	    startReportProcessing(reports_[i]);
 	}
+    }
+
+    void YdBaseTask::startReportProcessing(YdReport& report)
+    {
     }
 
     void YdBaseTask::setCompleted(mysqlpp::Connection& conn)
@@ -150,10 +154,6 @@ namespace ydd
 	    throw(e);
 	}
 	dbc_.switchUserDb(userId_);
-    }
-
-    void YdBaseTask::startReportProcessing(YdReport& report)
-    {
     }
 
     /* Don't forget that dbc_.switchUserDb(userId_) should be called before !!! */
