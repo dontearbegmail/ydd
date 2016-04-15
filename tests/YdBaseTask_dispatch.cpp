@@ -6,6 +6,7 @@
 #include <functional>
 #include <random>
 #include <time.h>
+#include "YdBaseTask_test_tasks_phrases.h"
 
 using namespace ydd;
 
@@ -197,6 +198,28 @@ class DispatchYdBaseTask : public YdBaseTask
 	    return ok;
 	}
 
+	bool tasksPhrasesOk(mysqlpp::Query& query)
+	{
+	    using namespace std;
+	    bool ok = false;
+	    vector<YdBaseTask_test_tasks_phrases> dbres, expected;
+	    query << "SELECT `taskid`, `finished`, `phrase` FROM `tasks_phrases`;";
+	    query.storein(dbres);
+
+	    for(auto ps_it = phrasesSets_.begin(); 
+		    ps_it != phrasesSets_.end(); ++ps_it)
+	    {
+		for(auto ph_it = ps_it->phrases.begin();
+			ph_it != ps_it->phrases.end(); ++ph_it)
+		{
+		    expected.push_back({ps_it->taskId, 1, ph_it->value});
+		}
+	    }
+	    ok = expected == dbres;
+
+	    return ok;
+	}
+
 	void test_simple(mysqlpp::Query& query)
 	{
 	    dbc_.switchUserDb(userId_);
@@ -208,6 +231,7 @@ class DispatchYdBaseTask : public YdBaseTask
 	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
 	    ios_.run();
 	    BOOST_REQUIRE(phrasesKeywordsOk(query));
+	    BOOST_REQUIRE(tasksPhrasesOk(query));
 	}
 };
 
