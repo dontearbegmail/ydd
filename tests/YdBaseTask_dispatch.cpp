@@ -163,6 +163,40 @@ class DispatchYdBaseTask : public YdBaseTask
 	    BOOST_REQUIRE(f == &(phrasesSets_[0].phrases[0]));
 	}
 
+	bool phrasesKeywordsOk(mysqlpp::Query& query)
+	{
+	    using namespace std;
+	    bool ok = false;
+	    vector<phrases_keywords> dbres;
+	    query << "SELECT `phraseid`, `keyword`, `shows` FROM `phrases_keywords`;";
+	    query.storein(dbres);
+
+	    size_t numdb = dbres.size();
+	    size_t headdb = 0;
+	    bool mism = false; // mismatch
+	    bool oor = false; // out of range
+	    for(auto ps_it = phrasesSets_.begin();
+		    (ps_it != phrasesSets_.end()) && !mism && !oor; ++ps_it)
+	    {
+		for(auto ph_it = ps_it->phrases.begin();
+			ph_it != ps_it->phrases.end(); ++ph_it)
+		{
+		    oor = (headdb + ph_it->keywords.size()) > numdb;
+		    if(oor)
+			break;
+		    auto m = mismatch(ph_it->keywords.begin(), ph_it->keywords.end(),
+			    dbres.begin() + headdb);
+		    mism = m.first != ph_it->keywords.end();
+		    if(mism)
+			break;
+		    headdb += ph_it->keywords.size();
+		}
+	    }
+	    ok = !mism && !oor;
+
+	    return ok;
+	}
+
 	void test_simple(mysqlpp::Query& query)
 	{
 	    dbc_.switchUserDb(userId_);
@@ -173,6 +207,7 @@ class DispatchYdBaseTask : public YdBaseTask
 	    flushQuery(query);
 	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
 	    ios_.run();
+	    BOOST_REQUIRE(phrasesKeywordsOk(query));
 	}
 };
 
