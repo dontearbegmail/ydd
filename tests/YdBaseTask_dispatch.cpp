@@ -5,19 +5,21 @@
 #include <algorithm>
 #include <functional>
 #include <random>
+#include <time.h>
 
 using namespace ydd;
 
+std::default_random_engine generator;
+std::uniform_int_distribution<unsigned long> distribution(0, 50);
+
 class DispatchYdBaseTask : public YdBaseTask
 {
-    std::default_random_engine generator;
-    std::uniform_int_distribution<unsigned long> distribution;
     public:
 	DispatchYdBaseTask(boost::asio::io_service& ios, DbConn& dbc, 
 		DbConn::UserIdType userId, DbConn::TaskIdType taskId) : 
-	    YdBaseTask(ios, dbc, userId, taskId),
-	    distribution(1, 50)
+	    YdBaseTask(ios, dbc, userId, taskId)
 	{
+	    generator.seed(time(NULL));
 	    using namespace mysqlpp;
 	    dbc_.switchUserDb(userId_);
 	    Query query = dbc_.get().query();
@@ -70,25 +72,69 @@ class DispatchYdBaseTask : public YdBaseTask
 	    flushQuery(query);
 	}
 
-	virtual void startReportProcessing(YdReport& report)
+	YdPhrase* findPhrase(unsigned long id)
 	{
+	    YdPhrase* p = nullptr;
+	    std::vector<YdPhrase>::iterator pit;
+	    for(std::vector<PhrasesSet>::iterator it = phrasesSets_.begin();
+		    (it != phrasesSets_.end()) && !p; ++it)
+	    {
+		pit = std::find_if(it->phrases.begin(), it->phrases.end(),
+			[id](YdPhrase& ph) {return ph.id == id;});
+		if(pit != it->phrases.end())
+		{
+		    p = &(*pit);
+		}
+	    }
+	    return p;
 	}
 
-	void generatePhraseKeywords(YdPhrase& phrase)
+	virtual void startReportProcessing(YdReport& report)
 	{
-	    unsigned long size = distribution(generator);
-	    std::string kw;
-	    for(unsigned long i = 0; i < size; i++)
+	    YdPhrase* found;
+	    for(std::vector<YdPhrase>::iterator it = report.phrases.begin();
+		    (it != report.phrases.end()) && found; ++it)
 	    {
-		kw = phrase.value;
-		kw.push_back('_');
-		kw.append(std::to_string(i));
-		phrase.keywords.push_back({phrase.id, kw, distribution(generator)});
+		found = findPhrase(it->id);
+		if(found)
+		{
+		    it->keywords = found->keywords;
+		}
 	    }
+	    if(!found)
+	    {
+		// put here error processing for some kind of YD error
+	    }
+	    report.isFinished = true;
+	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
 	}
 
 	struct PhrasesSet
 	{
+	    PhrasesSet(unsigned long _start, unsigned long _end, int _finished,
+		    unsigned long _taskId, unsigned long _lastId) :
+		start(_start), end(_end), finished(_finished), taskId(_taskId), 
+		lastId(_lastId)
+	    {
+		std::string v, kw;
+		unsigned long size;
+		for(unsigned long i = start; i <= end; i++)
+		{
+		    v = "phrase";
+		    v.append(std::to_string(i));
+		    phrases.push_back({lastId++, v});
+		    YdPhrase& last = phrases.back();
+
+		    size = distribution(generator);
+		    for(unsigned long j = 0; j < size; j++)
+		    {
+			kw = last.value;
+			kw.push_back('_');
+			kw.append(std::to_string(j));
+			last.keywords.push_back({last.id, kw, distribution(generator)});
+		    }
+		}
+	    }
 	    unsigned long start, end;
 	    int finished;
 	    unsigned long taskId;
@@ -96,33 +142,37 @@ class DispatchYdBaseTask : public YdBaseTask
 	    std::vector<YdPhrase> phrases;
 	};
 
-	void generatePhrases(PhrasesSet& ps)
-	{
-	    std::string v;
-	    for(unsigned long i = ps.start; i <= ps.end; i++)
-	    {
-		v = "phrase";
-		v.append(std::to_string(i));
-		ps.phrases.push_back({ps.lastId++, v});
-		generatePhraseKeywords(ps.phrases.back());
-	    }
-	}
-
 	std::vector<PhrasesSet> phrasesSets_;
+
 	void pushCallback(mysqlpp::Query& query, PhrasesSet& ps)
 	{
 	    query << "CALL `sp_fill_test_tasks_phrases_set`(" << ps.start << ", " <<
 		ps.end << ", " << ps.finished << ", " << ps.taskId << ");";
 	}
 
+	void dispatch()
+	{
+	    YdBaseTask::dispatch();
+	}
+
+	void test_findPhrase()
+	{
+	    phrasesSets_.push_back({1, 10, false, 1, 1});
+	    YdPhrase* f;
+	    BOOST_REQUIRE(f = findPhrase(1));
+	    BOOST_REQUIRE(f == &(phrasesSets_[0].phrases[0]));
+	}
+
 	void test_simple(mysqlpp::Query& query)
 	{
 	    dbc_.switchUserDb(userId_);
 	    resetPhrasesKeywords(query);
-	    phrasesSets_.push_back({1, 7, false, 1, 0});
+	    phrasesSets_.push_back({1, 7, false, 1, 1});
 	    pushCallback(query, phrasesSets_.back());
 	    query.exec();
 	    flushQuery(query);
+	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
+	    ios_.run();
 	}
 };
 
@@ -131,7 +181,7 @@ struct FxDYdBaseTask
     FxDYdBaseTask() :
 	ios(),
 	dbc(),
-	userId(50),
+	userId(51),
 	taskId(1),
 	tydt(ios, dbc, userId, taskId),
 	conn(dbc.get()),
@@ -148,3 +198,12 @@ struct FxDYdBaseTask
     mysqlpp::Query query;
 };
 
+BOOST_FIXTURE_TEST_CASE(test_simple, FxDYdBaseTask)
+{
+    tydt.test_simple(query);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_findPhrase, FxDYdBaseTask)
+{
+    tydt.test_findPhrase();
+}
