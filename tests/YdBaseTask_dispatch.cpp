@@ -212,10 +212,14 @@ class DispatchYdBaseTask : public YdBaseTask
 	    for(auto ps_it = phrasesSets_.begin(); 
 		    ps_it != phrasesSets_.end(); ++ps_it)
 	    {
+		signed char finished = 1;
+		if(ps_it->taskId != taskId_)
+		    finished = ps_it->finished;
+
 		for(auto ph_it = ps_it->phrases.begin();
 			ph_it != ps_it->phrases.end(); ++ph_it)
 		{
-		    expected.push_back({ps_it->taskId, 1, ph_it->value});
+		    expected.push_back({ps_it->taskId, finished, ph_it->value});
 		}
 	    }
 	    ok = expected == dbres;
@@ -255,9 +259,9 @@ class DispatchYdBaseTask : public YdBaseTask
 	{
 	    dbc_.switchUserDb(userId_);
 	    resetPhrasesKeywords(query);
-	    phrasesSets_.push_back({1, 4, 1, 1, 1});
+	    phrasesSets_.push_back({1, 4, 1, taskId_, 1});
 	    pushCallback(query, phrasesSets_.back());
-	    phrasesSets_.push_back({5, 9, 0, 1, 5});
+	    phrasesSets_.push_back({5, 9, 0, taskId_, 5});
 	    pushCallback(query, phrasesSets_.back());
 	    query.exec();
 	    flushQuery(query);
@@ -271,10 +275,154 @@ class DispatchYdBaseTask : public YdBaseTask
 	{
 	    dbc_.switchUserDb(userId_);
 	    resetPhrasesKeywords(query);
-	    phrasesSets_.push_back({1, 14, 1, 1, 1});
+	    phrasesSets_.push_back({1, 14, 1, taskId_, 1});
 	    pushCallback(query, phrasesSets_.back());
-	    phrasesSets_.push_back({15, 19, 0, 1, 15});
+	    phrasesSets_.push_back({15, 19, 0, taskId_, 15});
 	    pushCallback(query, phrasesSets_.back());
+	    query.exec();
+	    flushQuery(query);
+	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
+	    ios_.run();
+	    BOOST_REQUIRE(phrasesKeywordsOk(query));
+	    BOOST_REQUIRE(tasksPhrasesOk(query));
+	}
+
+	void test_simple_with_finished_3reports(mysqlpp::Query& query)
+	{
+	    dbc_.switchUserDb(userId_);
+	    resetPhrasesKeywords(query);
+
+	    phrasesSets_.push_back({1, 14, 1, taskId_, 1});
+	    pushCallback(query, phrasesSets_.back());
+
+	    unsigned long newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart + 10, 0, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
+	    query.exec();
+	    flushQuery(query);
+	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
+	    ios_.run();
+	    BOOST_REQUIRE(phrasesKeywordsOk(query));
+	    BOOST_REQUIRE(tasksPhrasesOk(query));
+	}
+
+	void test_simple_59phrases(mysqlpp::Query& query)
+	{
+	    dbc_.switchUserDb(userId_);
+	    resetPhrasesKeywords(query);
+
+	    phrasesSets_.push_back({1, 59, 0, taskId_, 1});
+	    pushCallback(query, phrasesSets_.back());
+	    query.exec();
+	    flushQuery(query);
+	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
+	    ios_.run();
+	    BOOST_REQUIRE(phrasesKeywordsOk(query));
+	    BOOST_REQUIRE(tasksPhrasesOk(query));
+	}
+
+	void test_simple_167phrases(mysqlpp::Query& query)
+	{
+	    dbc_.switchUserDb(userId_);
+	    resetPhrasesKeywords(query);
+
+	    phrasesSets_.push_back({1, 167, 0, taskId_, 1});
+	    pushCallback(query, phrasesSets_.back());
+	    query.exec();
+	    flushQuery(query);
+	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
+	    ios_.run();
+	    BOOST_REQUIRE(phrasesKeywordsOk(query));
+	    BOOST_REQUIRE(tasksPhrasesOk(query));
+	}
+
+	void test_simple_with_finished_250phrases(mysqlpp::Query& query)
+	{
+	    dbc_.switchUserDb(userId_);
+	    resetPhrasesKeywords(query);
+
+	    phrasesSets_.push_back({1, 113, 1, taskId_, 1});
+	    pushCallback(query, phrasesSets_.back());
+
+	    unsigned long newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart + 136, 0, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
+	    query.exec();
+	    flushQuery(query);
+	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
+	    ios_.run();
+	    BOOST_REQUIRE(phrasesKeywordsOk(query));
+	    BOOST_REQUIRE(tasksPhrasesOk(query));
+	}
+
+	void test_finished_in_the_middle_313phrases(mysqlpp::Query& query)
+	{
+	    dbc_.switchUserDb(userId_);
+	    resetPhrasesKeywords(query);
+
+	    phrasesSets_.push_back({1, 49, 1, taskId_, 1});
+	    pushCallback(query, phrasesSets_.back());
+
+	    unsigned long newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart + 100, 0, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
+	    newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart + 161, 1, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
+	    newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart, 0, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
+	    query.exec();
+	    flushQuery(query);
+	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
+	    ios_.run();
+	    BOOST_REQUIRE(phrasesKeywordsOk(query));
+	    BOOST_REQUIRE(tasksPhrasesOk(query));
+	}
+
+	void test_finished_in_the_middle_and_end_400phrases(mysqlpp::Query& query)
+	{
+	    dbc_.switchUserDb(userId_);
+	    resetPhrasesKeywords(query);
+
+	    phrasesSets_.push_back({1, 9, 0, taskId_, 1});
+	    pushCallback(query, phrasesSets_.back());
+
+	    unsigned long newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart + 39, 1, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
+	    newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart + 100, 0, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
+	    newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart + 247, 1, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
+	    newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart, 0, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
+	    newStart = phrasesSets_.back().end + 1;
+	    phrasesSets_.push_back({newStart, newStart, 1, taskId_, 
+		    phrasesSets_.back().lastId});
+	    pushCallback(query, phrasesSets_.back());
+
 	    query.exec();
 	    flushQuery(query);
 	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
@@ -306,7 +454,7 @@ struct FxDYdBaseTask
     mysqlpp::Query query;
 };
 
-/*BOOST_FIXTURE_TEST_CASE(test_simple, FxDYdBaseTask)
+BOOST_FIXTURE_TEST_CASE(test_simple, FxDYdBaseTask)
 {
     tydt.test_simple(query);
 }
@@ -324,9 +472,40 @@ BOOST_FIXTURE_TEST_CASE(test_simple_2reports, FxDYdBaseTask)
 BOOST_FIXTURE_TEST_CASE(test_simple_with_finished, FxDYdBaseTask)
 {
     tydt.test_simple_with_finished(query);
-}*/
+}
 
 BOOST_FIXTURE_TEST_CASE(test_simple_with_finished_2reports, FxDYdBaseTask)
 {
     tydt.test_simple_with_finished_2reports(query);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_simple_with_finished_3reports, FxDYdBaseTask)
+{
+    tydt.test_simple_with_finished_3reports(query);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_simple_59phrases, FxDYdBaseTask)
+{
+    tydt.test_simple_59phrases(query);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_simple_167phrases, FxDYdBaseTask)
+{
+    tydt.test_simple_167phrases(query);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_simple_with_finished_250phrases, FxDYdBaseTask)
+{
+    tydt.test_simple_with_finished_250phrases(query);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_finished_in_the_middle_313phrases, FxDYdBaseTask)
+{
+    tydt.test_finished_in_the_middle_313phrases(query);
+}
+
+// test_finished_in_the_middle_and_end_400phrases
+BOOST_FIXTURE_TEST_CASE(test_finished_in_the_middle_and_end_400phrases, FxDYdBaseTask)
+{
+    tydt.test_finished_in_the_middle_and_end_400phrases(query);
 }
