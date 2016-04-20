@@ -541,7 +541,7 @@ class TestYdBaseTask : public YdBaseTask
 	void flushTasks(mysqlpp::Query& query)
 	{
 	    dbc_.switchDbTasks();
-	    query << "UPDATE `tasks` SET `finished` = NULL";
+	    query << "UPDATE `tasks` SET `finished` = NULL, `finishedState` = NULL";
 	    query.exec();
 	    flushQuery(query);
 	    dbc_.switchUserDb(userId_);
@@ -554,7 +554,7 @@ class TestYdBaseTask : public YdBaseTask
 
 	    std::vector<YdBaseTask_test_tasks> tp_result, expected;
 	    dbc_.switchDbTasks();
-	    query << "SELECT `id`, `finished` FROM `tasks`";
+	    query << "SELECT `id`, `finished`, `finishedState` FROM `tasks`";
 	    query.storein(expected);
 	    std::vector<YdBaseTask_test_tasks>::iterator it;
 
@@ -566,7 +566,7 @@ class TestYdBaseTask : public YdBaseTask
 	    BOOST_REQUIRE_NO_THROW(setCompleted(conn));
 
 	    dbc_.switchDbTasks();
-	    query << "SELECT `id`, `finished` FROM `tasks`";
+	    query << "SELECT `id`, `finished`, `finishedState` FROM `tasks`";
 	    query.storein(tp_result);
 	    it = std::find_if(tp_result.begin(), tp_result.end(), 
 		    [this](YdBaseTask_test_tasks& v) {return this->taskId_ == v.id;});
@@ -577,6 +577,8 @@ class TestYdBaseTask : public YdBaseTask
 	    BOOST_REQUIRE(tt.id == et.id);
 	    BOOST_REQUIRE(tt.finished != mysqlpp::null);
 	    BOOST_REQUIRE(et.finished == mysqlpp::null);
+	    BOOST_REQUIRE(tt.finishedState == (mysqlpp::sql_tinyint_unsigned_null) GeneralState::init);
+	    BOOST_REQUIRE(et.finishedState == mysqlpp::null);
 	}
 };
 

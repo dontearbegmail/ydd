@@ -110,28 +110,48 @@ namespace ydd
     void YdBaseTask::dispatch()
     {
 	using namespace mysqlpp;
+	bool needShutdown = false;
 	dbc_.switchUserDb(userId_);
 	Connection& conn = dbc_.get();
 	storeReports(conn);
-	size_t phrasesToGet = countFreePhrasesSlots();
-	if(phrasesToGet == 0)
-	    return;
-	size_t dispatchedReports = reports_.size();
-	size_t newPhrasesCount = getPhrasesFromDb(phrasesToGet, conn);
-	/* The task is finished */
-	if(newPhrasesCount == 0 && dispatchedReports == 0)
+	if(state_ == inProgress)
 	{
-	    /* Mark the task as completed in the DB */
+	    size_t phrasesToGet = countFreePhrasesSlots();
+	    if(phrasesToGet == 0)
+		return;
+	    size_t dispatchedReports = reports_.size();
+	    size_t newPhrasesCount = getPhrasesFromDb(phrasesToGet, conn);
+	    /* All phrases processed successfully */
+	    if(newPhrasesCount == 0 && dispatchedReports == 0)
+	    {
+		state_ = ok;
+		needShutdown = true;
+	    }
+	    else
+	    {
+		/* Start processing new reports */
+		for(size_t i = dispatchedReports; i < reports_.size(); i++)
+		{
+		    startReportProcessing(reports_[i]);
+		}
+	    }
+	}
+	/* One of the reports returned an error (detected in "this->storeReports, 
+	 * and state_ is set there also) - shutdown gracefully */
+	else
+	{
+	    if(reports_.size() == 0)
+	    {
+		needShutdown = true;
+	    }
+	}
+	if(needShutdown)
+	{
+	    /* Mark the task as completed in the DB, write state_ to DB */
 	    setCompleted(conn);
 	    /* ... and invoke the upper level callback for the task completion */
 	    if(callback_)
 		ios_.post(callback_);
-	    return;
-	}
-	/* Start processing new reports */
-	for(size_t i = dispatchedReports; i < reports_.size(); i++)
-	{
-	    startReportProcessing(reports_[i]);
 	}
     }
 
@@ -146,8 +166,9 @@ namespace ydd
 	Query query = conn.query();
 	try
 	{
-	    query << "UPDATE `tasks` SET `finished` = CURRENT_TIMESTAMP "
-		"WHERE `id` = " << taskId_;
+	    query << "UPDATE `tasks` SET `finished` = CURRENT_TIMESTAMP, "
+		"`finishedState` = " << state_ <<
+		" WHERE `id` = " << taskId_;
 	    query.execute();
 	}
 	catch(mysqlpp::Exception& e)
