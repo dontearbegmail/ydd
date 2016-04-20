@@ -13,7 +13,8 @@ namespace ydd
 	ios_(ios),
 	dbc_(dbc),
 	userId_(userId),
-	taskId_(taskId)
+	taskId_(taskId),
+	state_(ydd::GeneralState::init)
     {
 	// ios.post(<delete old reports with callback to this->dispatch()>);
     }
@@ -100,6 +101,7 @@ namespace ydd
 	}
 	catch(const mysqlpp::Exception& e)
 	{
+	    state_ = errDatabase;
 	    msyslog(LOG_ERR, "Got a MySQL exception: %s", e.what());
 	    throw(e);
 	}
@@ -150,6 +152,7 @@ namespace ydd
 	}
 	catch(mysqlpp::Exception& e)
 	{
+	    state_ = errDatabase;
 	    msyslog(LOG_ERR, "Got mysqlpp::Exception: %s", e.what());
 	    throw(e);
 	}
@@ -194,6 +197,7 @@ namespace ydd
 	}
 	catch(mysqlpp::Exception& e)
 	{
+	    state_ = errDatabase;
 	    msyslog(LOG_ERR, "Got mysqlpp::Exception: %s", e.what());
 	    throw(e);
 	}
@@ -247,6 +251,7 @@ namespace ydd
 	}
 	catch(mysqlpp::Exception& e)
 	{
+	    state_ = errDatabase;
 	    msyslog(LOG_ERR, "Got mysqlpp::Exception: %s", e.what());
 	    throw(e);
 	}

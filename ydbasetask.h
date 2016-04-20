@@ -27,6 +27,7 @@ namespace ydd
 	    DbConn::TaskIdType taskId_;
 	    std::vector<YdReport> reports_;
 	    std::function<void()> callback_;
+	    ydd::GeneralState state_;
 
 	    void dispatch();
 	    /* Don't forget that dbc_.switchUserDb(userId_) should be called 
