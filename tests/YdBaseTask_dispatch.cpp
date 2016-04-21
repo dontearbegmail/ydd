@@ -7,6 +7,7 @@
 #include <random>
 #include <time.h>
 #include "YdBaseTask_test_tasks_phrases.h"
+#include "../ydphrase.h"
 
 using namespace ydd;
 
@@ -16,10 +17,16 @@ std::uniform_int_distribution<unsigned long> distribution(0, 50);
 class DispatchYdBaseTask : public YdBaseTask
 {
     public:
+	bool testingErrors_;
+	size_t curReportIdx_;
+	struct ReportToState {size_t reportIdx; ydd::GeneralState state;};
+	std::vector<ReportToState> reportsToState_;
 	DispatchYdBaseTask(boost::asio::io_service& ios, DbConn& dbc, 
 		DbConn::UserIdType userId, DbConn::TaskIdType taskId) : 
 	    YdBaseTask(ios, dbc, userId, taskId)
 	{
+	    testingErrors_ = false;
+	    curReportIdx_ = 0;
 	    PhrasesSet::setMainTaskId(taskId_);
 	    generator.seed(time(NULL));
 	    using namespace mysqlpp;
@@ -117,6 +124,24 @@ class DispatchYdBaseTask : public YdBaseTask
 	    }
 	    report.isFinished = true;
 	    report.state = GeneralState::ok;
+	    if(testingErrors_)
+	    {
+		GeneralState s;
+		if(std::any_of(reportsToState_.begin(), reportsToState_.end(),
+			    [&s, this](ReportToState r) 
+			    {
+				if(r.reportIdx == this->curReportIdx_)
+				{
+				    s = r.state;
+				    return true;
+				}
+				return false;
+			    }))
+		{
+		    report.state = s;
+		}
+	    }
+	    ++curReportIdx_;
 	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
 	}
 
@@ -150,6 +175,7 @@ class DispatchYdBaseTask : public YdBaseTask
 		    }
 		}
 	    }
+
 	    static void setMainTaskId(unsigned long id)
 	    {
 		mainTaskId = id;

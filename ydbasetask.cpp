@@ -140,7 +140,11 @@ namespace ydd
 	 * and state_ is set there also) - shutdown gracefully */
 	else
 	{
-	    if(reports_.size() == 0)
+	    if(state_ == errDatabase || state_ == errNetwork || state_ == yderrBadAuth)
+	    {
+		needShutdown = true;
+	    }
+	    else if(reports_.size() == 0)
 	    {
 		needShutdown = true;
 	    }
@@ -235,6 +239,7 @@ namespace ydd
 	    {
 		if(it_rep->state == GeneralState::ok)
 		{
+		    // TODO: neet tests when state_ != inProgress && it_rep->state == ok
 		    if(state_ == GeneralState::inProgress)
 		    {
 			// The report is all done: put it into the db and remove from reports_
