@@ -233,11 +233,21 @@ namespace ydd
 	{
 	    if(it_rep->isFinished)
 	    {
-		// The report is all done: put it into the db and remove from reports_
-		for(std::vector<YdPhrase>::iterator it = it_rep->phrases.begin();
-			it != it_rep->phrases.end(); ++it)
+		if(it_rep->state == GeneralState::ok)
 		{
-		    storePhrase(*it, conn);
+		    if(state_ == GeneralState::inProgress)
+		    {
+			// The report is all done: put it into the db and remove from reports_
+			for(std::vector<YdPhrase>::iterator it = it_rep->phrases.begin();
+				it != it_rep->phrases.end(); ++it)
+			{
+			    storePhrase(*it, conn);
+			}
+		    }
+		}
+		else
+		{
+		    state_ = it_rep->state;
 		}
 		it_rep = reports_.erase(it_rep);
 	    }

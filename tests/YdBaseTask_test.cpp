@@ -744,7 +744,8 @@ BOOST_FIXTURE_TEST_CASE(test_getPhrasesFromDb_73phrases_5freereports_readyPhrase
     tydt.test_getPhrasesFromDb_73phrases_5freereports_readyPhrasesPresent(conn);
 }
 
+/*
 BOOST_FIXTURE_TEST_CASE(test_setCompleted_simple, FxYdBaseTask)
 {
     tydt.test_setCompleted_simple(query, conn);
-}
+}*/

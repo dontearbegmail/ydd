@@ -116,6 +116,7 @@ class DispatchYdBaseTask : public YdBaseTask
 		BOOST_ERROR("Ouch...");
 	    }
 	    report.isFinished = true;
+	    report.state = GeneralState::ok;
 	    ios_.post(std::bind(&DispatchYdBaseTask::dispatch, this));
 	}
 
@@ -644,7 +645,7 @@ BOOST_FIXTURE_TEST_CASE(test_simple, FxDYdBaseTask)
 {
     tydt.test_simple(query);
 }
-/*
+
 BOOST_FIXTURE_TEST_CASE(test_findPhrase, FxDYdBaseTask)
 {
     tydt.test_findPhrase();
@@ -714,4 +715,4 @@ BOOST_FIXTURE_TEST_CASE(test_3tasks_main_in_the_middle, FxDYdBaseTask)
 BOOST_FIXTURE_TEST_CASE(test_5tasks_main_split_with_finished, FxDYdBaseTask)
 {
     tydt.test_5tasks_main_split_with_finished(query);
-}*/
+}
